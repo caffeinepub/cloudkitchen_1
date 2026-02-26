@@ -1,10 +1,8 @@
-import List "mo:core/List";
 import Iter "mo:core/Iter";
 import Order "mo:core/Order";
 import Array "mo:core/Array";
 import Map "mo:core/Map";
 import Time "mo:core/Time";
-import Text "mo:core/Text";
 import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
 import Float "mo:core/Float";
@@ -17,7 +15,6 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // User Profile Type
   public type UserProfile = {
     name : Text;
     phone : Text;
@@ -86,9 +83,10 @@ actor {
   // User Profile Management
   // -------------------------------
 
+  // Only check for anonymous, no role check (allows new users to bootstrap)
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access profiles");
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Anonymous users cannot have profiles");
     };
     userProfiles.get(caller);
   };
@@ -100,9 +98,10 @@ actor {
     userProfiles.get(user);
   };
 
+  // Only check for anonymous, no role check (allows new users to bootstrap)
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Anonymous users cannot save profiles");
     };
     userProfiles.add(caller, profile);
   };
@@ -328,10 +327,9 @@ actor {
   // -------------------------------
   // Inventory Management
   // -------------------------------
-
   module InventoryItem {
     public func compare(inventoryItem1 : InventoryItem, inventoryItem2 : InventoryItem) : Order.Order {
-      Int.compare(inventoryItem1.quantity.toInt(), inventoryItem2.quantity.toInt());
+      Float.compare(inventoryItem1.quantity, inventoryItem2.quantity);
     };
   };
 

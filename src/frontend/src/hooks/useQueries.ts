@@ -6,8 +6,6 @@ import {
   OrderStatus,
   InventoryItem,
   OrderItem,
-  UserRole,
-  UserProfile,
 } from "../backend.d";
 
 // ─── Menu ────────────────────────────────────────────────────────────────────
@@ -306,46 +304,4 @@ export function useTopSellingItems(limit: bigint) {
   });
 }
 
-// ─── Auth / User ─────────────────────────────────────────────────────────────
-export function useIsAdmin() {
-  const { actor, isFetching } = useActor();
-  return useQuery<boolean>({
-    queryKey: ["isAdmin"],
-    queryFn: async () => {
-      if (!actor) return false;
-      return actor.isCallerAdmin();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
 
-export function useUserProfile() {
-  const { actor, isFetching } = useActor();
-  return useQuery<UserProfile | null>({
-    queryKey: ["userProfile"],
-    queryFn: async () => {
-      if (!actor) return null;
-      return actor.getCallerUserProfile();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useSaveUserProfile() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (profile: UserProfile) => actor!.saveCallerUserProfile(profile),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["userProfile"] }),
-  });
-}
-
-export function useAssignAdminRole() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ principal }: { principal: import("@icp-sdk/core/principal").Principal }) =>
-      actor!.assignCallerUserRole(principal, UserRole.admin),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["isAdmin"] }),
-  });
-}

@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 const NAV_ITEMS = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -34,6 +35,12 @@ interface AdminSidebarProps {
 export function AdminSidebar({ collapsed, setCollapsed }: AdminSidebarProps) {
   const location = useLocation();
   const { clear } = useInternetIdentity();
+  const qc = useQueryClient();
+
+  function handleSignOut() {
+    qc.clear();
+    clear();
+  }
 
   return (
     <aside
@@ -105,7 +112,7 @@ export function AdminSidebar({ collapsed, setCollapsed }: AdminSidebarProps) {
             "w-full text-sidebar-foreground hover:bg-sidebar-accent hover:text-destructive transition-colors",
             collapsed ? "justify-center px-2" : "justify-start gap-3"
           )}
-          onClick={clear}
+          onClick={handleSignOut}
         >
           <LogOut className="w-4 h-4 shrink-0" />
           {!collapsed && <span className="font-body text-sm">Sign Out</span>}
@@ -120,6 +127,13 @@ export function MobileAdminNav() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { clear } = useInternetIdentity();
+  const qc = useQueryClient();
+
+  function handleSignOut() {
+    qc.clear();
+    clear();
+    setOpen(false);
+  }
 
   return (
     <>
@@ -166,7 +180,7 @@ export function MobileAdminNav() {
             <button
               type="button"
               className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent w-full"
-              onClick={clear}
+              onClick={handleSignOut}
             >
               <LogOut className="w-4 h-4" />
               Sign Out

@@ -1,44 +1,33 @@
 # SaladStation
 
 ## Current State
-A cloud kitchen management app called "CLOUDFIRE" with an ember/fire branding (orange gradients, Flame icon). It includes:
-- Admin dashboard with stats, orders, inventory, analytics
-- Customer ordering page at `/order`
-- Menu management with generic categories: Appetizers, Mains, Sides, Desserts, Beverages, Specials, Other
-- Branding text: "CLOUDFIRE", "Fresh from our cloud kitchen", "Kitchen Management System"
-- Orange/amber color scheme with fire-themed gradients
+The app uses Internet Identity authentication. The `AdminGuard` component gates all kitchen routes behind login. If not logged in, it shows the Login page. If logged in but no profile, it shows AdminSetup. If logged in but not admin, it shows "Access Denied". The backend enforces admin-only access on all management endpoints using role-based access control.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Salad-specific menu categories: Salads, Bowls, Wraps, Toppings, Dressings, Drinks, Specials
-- Fresh green color palette (primary: green/lime tones using OKLCH)
-- Leaf icon instead of Flame icon for the logo
+- Nothing new
 
 ### Modify
-- Brand name: "CLOUDFIRE" → "SALAD STATION" (or stylized "SALAD<accent>STATION</accent>")
-- Tagline on customer page: "Fresh from our cloud kitchen" → "Fresh, healthy salads made to order"
-- Tagline on login page: "Kitchen Management System" → "Salad Bar Management System"
-- Admin login card description: update to reference salad bar management
-- Color scheme: orange ember theme → fresh green/leaf theme
-- `ember-gradient` style → fresh green gradient
-- Customer order page success message: "We'll prepare it fresh for you!" → "Your fresh salad is being prepared!"
-- MenuManagement CATEGORIES array → salad-focused categories
-- Dashboard page copy: no changes needed (generic enough)
+- Backend: Remove admin permission checks from all management endpoints (menu, orders, inventory, analytics). All endpoints become open/public. Keep `placeOrder` and `getAvailableMenuItems` as-is (already public). Remove user profile and role management entirely or make them no-ops.
+- Frontend `App.tsx`: Remove `AdminGuard` component. The admin layout route renders `AdminLayout` + `<Outlet />` directly, with no auth check.
+- Frontend: Remove `Login.tsx` and `AdminSetup.tsx` pages (no longer needed).
+- Frontend hooks: Remove `useIsAdmin`, `useUserProfile`, `useSaveUserProfile`, `useAssignAdminRole` from `useQueries.ts` since auth is gone.
 
 ### Remove
-- Fire/ember visual metaphors (Flame icon, ember-gradient class references in branding elements)
+- Login page and route
+- AdminSetup page
+- AdminGuard component
+- Authentication-related query hooks
 
 ## Implementation Plan
-1. Rename project to "SaladStation"
-2. Update `index.css`: change primary color from amber/orange to green, update `ember-gradient` to a fresh green gradient
-3. Update `AdminSidebar.tsx`: replace Flame with Leaf icon, change "CLOUDFIRE" to "SALAD<accent>STATION</accent>"
-4. Update `MobileAdminNav` in `AdminSidebar.tsx`: same logo/name change
-5. Update `Login.tsx`: change logo icon, brand name, and tagline
-6. Update `CustomerOrder.tsx`: change header logo/brand name, update success message tagline
-7. Update `MenuManagement.tsx`: replace CATEGORIES with salad-focused list
+1. Regenerate backend without auth/roles -- all management endpoints are open
+2. Update `App.tsx` to remove AdminGuard, show dashboard directly
+3. Remove Login.tsx and AdminSetup.tsx
+4. Remove auth hooks from useQueries.ts
+5. Fix any TypeScript errors from removed imports
 
 ## UX Notes
-- Keep the dark sidebar with light text -- it works well for a kitchen environment
-- Green primary fits salads naturally -- aim for a fresh, crisp feel
-- Maintain all existing layout/structure, only change copy, colors, and icons
+- The app opens directly to the dashboard -- no login, no setup, no access denied screens
+- Customer `/order` route remains public as-is
+- Kitchen display at `/kitchen` remains public as-is
