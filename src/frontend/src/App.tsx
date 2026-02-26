@@ -50,9 +50,26 @@ function AdminGuard() {
     );
   }
 
-  // Not admin — show setup (first-time or needs promotion)
-  if (!isAdmin) {
+  // No profile yet (new user) — show profile setup so backend can auto-assign admin on first login
+  if (!userProfile?.name) {
     return <AdminSetup />;
+  }
+
+  // Has a profile but not admin — truly access denied
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <p className="text-sidebar-foreground font-display text-xl font-bold">Access Denied</p>
+          <p className="text-sidebar-foreground/60 font-body text-sm">
+            You don't have admin access to SaladStation.
+          </p>
+          <p className="text-sidebar-foreground/40 font-body text-xs">
+            Sign in with the owner account to manage your kitchen.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
