@@ -51,6 +51,7 @@ import {
   Pencil,
   ClockAlert,
   Ban,
+  Plus,
 } from "lucide-react";
 import {
   useAllSubscriptions,
@@ -58,6 +59,7 @@ import {
   useCheckAndExpireSubscriptions,
   useExpiringSubscriptions,
   useUpdateSubscription,
+  useCreateSubscription,
 } from "../hooks/useQueries";
 import {
   SubscriptionPlan,
@@ -198,6 +200,233 @@ function PaymentBadge({ status }: { status: PaymentStatus }) {
     >
       {c.label}
     </span>
+  );
+}
+
+// ─── Add Subscription Dialog ──────────────────────────────────────────────────
+
+interface AddSubscriptionDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const DEFAULT_ADD_FORM = {
+  customerName: "",
+  customerPhone: "",
+  plan: SubscriptionPlan.weekly as SubscriptionPlan,
+  bowlSize: BowlSize.medium as BowlSize,
+  price: "",
+  paymentStatus: PaymentStatus.pending as PaymentStatus,
+};
+
+function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProps) {
+  const createSub = useCreateSubscription();
+  const updateSub = useUpdateSubscription();
+  const [form, setForm] = useState({ ...DEFAULT_ADD_FORM });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function resetForm() {
+    setForm({ ...DEFAULT_ADD_FORM });
+  }
+
+  function handleOpenChange(newOpen: boolean) {
+    if (!newOpen) resetForm();
+    onOpenChange(newOpen);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsedPrice = parseFloat(form.price);
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+    if (!form.customerName.trim()) {
+      toast.error("Customer name is required");
+      return;
+    }
+    if (!form.customerPhone.trim()) {
+      toast.error("Phone number is required");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const newSub = await createSub.mutateAsync({
+        customerName: form.customerName.trim(),
+        customerPhone: form.customerPhone.trim(),
+        plan: form.plan,
+        bowlSize: form.bowlSize,
+        price: parsedPrice,
+      });
+
+      // If payment status is not pending, update it
+      if (form.paymentStatus !== PaymentStatus.pending) {
+        await updateSub.mutateAsync({
+          id: newSub.id,
+          bowlSize: form.bowlSize,
+          price: parsedPrice,
+          paymentStatus: form.paymentStatus,
+        });
+      }
+
+      toast.success(`Subscription added for ${form.customerName.trim()}`);
+      handleOpenChange(false);
+    } catch {
+      toast.error("Failed to add subscription");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display text-xl">
+            Add Subscription
+          </DialogTitle>
+          <DialogDescription className="font-body text-sm">
+            Enter the customer's details to create a new subscription.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          {/* Customer Name */}
+          <div className="space-y-1.5">
+            <Label htmlFor="add-cust-name" className="font-body text-sm font-medium">
+              Customer Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="add-cust-name"
+              type="text"
+              required
+              value={form.customerName}
+              onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
+              className="font-body"
+              placeholder="e.g. Priya Sharma"
+            />
+          </div>
+
+          {/* Phone Number */}
+          <div className="space-y-1.5">
+            <Label htmlFor="add-cust-phone" className="font-body text-sm font-medium">
+              Phone Number <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="add-cust-phone"
+              type="tel"
+              required
+              value={form.customerPhone}
+              onChange={(e) => setForm((p) => ({ ...p, customerPhone: e.target.value }))}
+              className="font-body"
+              placeholder="e.g. +91 98765 43210"
+            />
+          </div>
+
+          {/* Plan */}
+          <div className="space-y-1.5">
+            <Label className="font-body text-sm font-medium">Plan</Label>
+            <Select
+              value={form.plan}
+              onValueChange={(v) => setForm((p) => ({ ...p, plan: v as SubscriptionPlan }))}
+            >
+              <SelectTrigger className="font-body">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SubscriptionPlan.weekly} className="font-body">
+                  Weekly — 6 bowls / week
+                </SelectItem>
+                <SelectItem value={SubscriptionPlan.monthly} className="font-body">
+                  Monthly — 24 bowls / month
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Bowl Size */}
+          <div className="space-y-1.5">
+            <Label className="font-body text-sm font-medium">Bowl Size</Label>
+            <Select
+              value={form.bowlSize}
+              onValueChange={(v) => setForm((p) => ({ ...p, bowlSize: v as BowlSize }))}
+            >
+              <SelectTrigger className="font-body">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={BowlSize.small} className="font-body">Small</SelectItem>
+                <SelectItem value={BowlSize.medium} className="font-body">Medium</SelectItem>
+                <SelectItem value={BowlSize.large} className="font-body">Large</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Price */}
+          <div className="space-y-1.5">
+            <Label htmlFor="add-price" className="font-body text-sm font-medium">
+              Price (₹) <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="add-price"
+              type="number"
+              required
+              min="0"
+              step="0.01"
+              value={form.price}
+              onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
+              className="font-body"
+              placeholder="e.g. 700"
+            />
+          </div>
+
+          {/* Payment Status */}
+          <div className="space-y-1.5">
+            <Label className="font-body text-sm font-medium">Payment Status</Label>
+            <Select
+              value={form.paymentStatus}
+              onValueChange={(v) => setForm((p) => ({ ...p, paymentStatus: v as PaymentStatus }))}
+            >
+              <SelectTrigger className="font-body">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={PaymentStatus.pending} className="font-body">Pending</SelectItem>
+                <SelectItem value={PaymentStatus.paid} className="font-body">Paid</SelectItem>
+                <SelectItem value={PaymentStatus.overdue} className="font-body">Overdue</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="font-body"
+              onClick={() => handleOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="ember-gradient text-white border-0 font-body"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                  Adding…
+                </>
+              ) : (
+                "Add Subscription"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -364,6 +593,7 @@ export default function Subscriptions() {
   const [pendingId, setPendingId] = useState<bigint | null>(null);
   const [editingSub, setEditingSub] = useState<Subscription | null>(null);
   const [filterTab, setFilterTab] = useState<FilterTab>("all");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   // On mount: check and expire subscriptions automatically
   const checkExpireMutate = checkExpire.mutate;
@@ -413,13 +643,22 @@ export default function Subscriptions() {
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">
-          Subscriptions
-        </h1>
-        <p className="text-muted-foreground font-body text-sm mt-1">
-          Manage your recurring salad bowl subscriptions
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-bold text-foreground">
+            Subscriptions
+          </h1>
+          <p className="text-muted-foreground font-body text-sm mt-1">
+            Manage your recurring salad bowl subscriptions
+          </p>
+        </div>
+        <Button
+          className="ember-gradient text-white border-0 font-body shrink-0 gap-1.5"
+          onClick={() => setAddDialogOpen(true)}
+        >
+          <Plus className="w-4 h-4" />
+          Add Subscription
+        </Button>
       </div>
 
       {/* Expiry Alert Banner */}
@@ -604,7 +843,7 @@ export default function Subscriptions() {
               </h3>
               <p className="font-body text-sm text-muted-foreground mt-1">
                 {filterTab === "all"
-                  ? "Share your subscribe link to get your first subscribers"
+                  ? "Click \"Add Subscription\" above to add your first subscriber"
                   : "Try selecting a different filter"}
               </p>
             </div>
@@ -842,6 +1081,12 @@ export default function Subscriptions() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Subscription Dialog */}
+      <AddSubscriptionDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+      />
 
       {/* Edit Dialog */}
       {editingSub && (

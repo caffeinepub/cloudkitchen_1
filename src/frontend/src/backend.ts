@@ -116,6 +116,13 @@ export interface Order {
     customerId: Principal;
     items: Array<OrderItem>;
 }
+export interface Customer {
+    id: bigint;
+    name: string;
+    mobileNo: string;
+    preferences: string;
+    address: string;
+}
 export interface Subscription {
     id: bigint;
     customerName: string;
@@ -185,17 +192,21 @@ export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     checkAndExpireSubscriptions(): Promise<bigint>;
+    createCustomer(name: string, mobileNo: string, preferences: string, address: string): Promise<Customer>;
     createInventoryItem(name: string, unit: string, quantity: number, lowStockThreshold: number): Promise<InventoryItem>;
     createMenuItem(name: string, description: string, price: number, category: string, imageUrl: string): Promise<MenuItem>;
     createSubscription(customerName: string, customerPhone: string, plan: SubscriptionPlan, bowlSize: BowlSize, price: number): Promise<Subscription>;
+    deleteCustomer(id: bigint): Promise<void>;
     deleteInventoryItem(id: bigint): Promise<void>;
     deleteMenuItem(id: bigint): Promise<void>;
     getActiveSubscriptionCount(): Promise<bigint>;
+    getAllCustomers(): Promise<Array<Customer>>;
     getAllOrders(): Promise<Array<Order>>;
     getAllSubscriptions(): Promise<Array<Subscription>>;
     getAvailableMenuItems(): Promise<Array<MenuItem>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getCustomer(id: bigint): Promise<Customer>;
     getDailyBreakdown(startTime: Time, endTime: Time): Promise<Array<DailyStats>>;
     getExpiringSubscriptions(): Promise<Array<Subscription>>;
     getLowStockItems(): Promise<Array<InventoryItem>>;
@@ -211,6 +222,7 @@ export interface backendInterface {
     placeOrder(customerName: string, customerPhone: string, items: Array<OrderItem>, notes: string): Promise<Order>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     toggleMenuItemAvailability(id: bigint): Promise<MenuItem>;
+    updateCustomer(id: bigint, name: string, mobileNo: string, preferences: string, address: string): Promise<Customer>;
     updateInventoryItem(id: bigint, name: string, unit: string, quantity: number, lowStockThreshold: number): Promise<InventoryItem>;
     updateMenuItem(id: bigint, name: string, description: string, price: number, category: string, imageUrl: string): Promise<MenuItem>;
     updateOrderStatus(orderId: bigint, status: OrderStatus): Promise<Order>;
@@ -263,6 +275,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async createCustomer(arg0: string, arg1: string, arg2: string, arg3: string): Promise<Customer> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createCustomer(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createCustomer(arg0, arg1, arg2, arg3);
+            return result;
+        }
+    }
     async createInventoryItem(arg0: string, arg1: string, arg2: number, arg3: number): Promise<InventoryItem> {
         if (this.processError) {
             try {
@@ -305,6 +331,20 @@ export class Backend implements backendInterface {
             return from_candid_Subscription_n7(this._uploadFile, this._downloadFile, result);
         }
     }
+    async deleteCustomer(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteCustomer(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteCustomer(arg0);
+            return result;
+        }
+    }
     async deleteInventoryItem(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
@@ -344,6 +384,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getActiveSubscriptionCount();
+            return result;
+        }
+    }
+    async getAllCustomers(): Promise<Array<Customer>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllCustomers();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllCustomers();
             return result;
         }
     }
@@ -415,6 +469,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getCallerUserRole();
             return from_candid_UserRole_n24(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCustomer(arg0: bigint): Promise<Customer> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCustomer(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCustomer(arg0);
+            return result;
         }
     }
     async getDailyBreakdown(arg0: Time, arg1: Time): Promise<Array<DailyStats>> {
@@ -585,6 +653,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.toggleMenuItemAvailability(arg0);
+            return result;
+        }
+    }
+    async updateCustomer(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string): Promise<Customer> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateCustomer(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateCustomer(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }

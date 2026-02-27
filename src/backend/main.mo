@@ -92,16 +92,26 @@ actor {
     totalDeliveriesMade : Nat;
   };
 
+  public type Customer = {
+    id : Nat;
+    name : Text;
+    mobileNo : Text;
+    preferences : Text;
+    address : Text;
+  };
+
   let userProfiles = Map.empty<Principal, UserProfile>();
   let menuItems = Map.empty<Nat, MenuItem>();
   let orders = Map.empty<Nat, Order>();
   let inventory = Map.empty<Nat, InventoryItem>();
   let subscriptions = Map.empty<Nat, Subscription>();
+  let customers = Map.empty<Nat, Customer>();
 
   var nextMenuItemId = 1;
   var nextOrderId = 1;
   var nextInventoryItemId = 1;
   var nextSubscriptionId = 1;
+  var nextCustomerId = 1;
 
   // -------------------------------
   // User Profile Management
@@ -722,5 +732,94 @@ actor {
     subscriptions.values().toArray().filter(
       func(s) { s.status == #active }
     ).size();
+  };
+
+  // -------------------------------
+  // Customer Management (NEW)
+  // -------------------------------
+
+  // Create Customer (Admin only)
+  public shared ({ caller }) func createCustomer(
+    name : Text,
+    mobileNo : Text,
+    preferences : Text,
+    address : Text,
+  ) : async Customer {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    let customer : Customer = {
+      id = nextCustomerId;
+      name;
+      mobileNo;
+      preferences;
+      address;
+    };
+
+    customers.add(nextCustomerId, customer);
+    nextCustomerId += 1;
+    customer;
+  };
+
+  // Update Customer (Admin only)
+  public shared ({ caller }) func updateCustomer(
+    id : Nat,
+    name : Text,
+    mobileNo : Text,
+    preferences : Text,
+    address : Text,
+  ) : async Customer {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (customers.get(id)) {
+      case (null) { Runtime.trap("Customer not found") };
+      case (?_) {
+        let updated : Customer = {
+          id;
+          name;
+          mobileNo;
+          preferences;
+          address;
+        };
+        customers.add(id, updated);
+        updated;
+      };
+    };
+  };
+
+  // Delete Customer (Admin only)
+  public shared ({ caller }) func deleteCustomer(id : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    if (not customers.containsKey(id)) {
+      Runtime.trap("Customer not found");
+    };
+    customers.remove(id);
+  };
+
+  // Get All Customers (Admin only)
+  public query ({ caller }) func getAllCustomers() : async [Customer] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    customers.values().toArray();
+  };
+
+  // Get Customer by ID (Admin only)
+  public query ({ caller }) func getCustomer(id : Nat) : async Customer {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (customers.get(id)) {
+      case (null) { Runtime.trap("Customer not found") };
+      case (?customer) { customer };
+    };
   };
 };

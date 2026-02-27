@@ -13,6 +13,13 @@ import type { Principal } from '@icp-sdk/core/principal';
 export type BowlSize = { 'large' : null } |
   { 'small' : null } |
   { 'medium' : null };
+export interface Customer {
+  'id' : bigint,
+  'name' : string,
+  'mobileNo' : string,
+  'preferences' : string,
+  'address' : string,
+}
 export interface DailyStats {
   'revenue' : number,
   'date' : Time,
@@ -91,6 +98,7 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'checkAndExpireSubscriptions' : ActorMethod<[], bigint>,
+  'createCustomer' : ActorMethod<[string, string, string, string], Customer>,
   'createInventoryItem' : ActorMethod<
     [string, string, number, number],
     InventoryItem
@@ -103,14 +111,17 @@ export interface _SERVICE {
     [string, string, SubscriptionPlan, BowlSize, number],
     Subscription
   >,
+  'deleteCustomer' : ActorMethod<[bigint], undefined>,
   'deleteInventoryItem' : ActorMethod<[bigint], undefined>,
   'deleteMenuItem' : ActorMethod<[bigint], undefined>,
   'getActiveSubscriptionCount' : ActorMethod<[], bigint>,
+  'getAllCustomers' : ActorMethod<[], Array<Customer>>,
   'getAllOrders' : ActorMethod<[], Array<Order>>,
   'getAllSubscriptions' : ActorMethod<[], Array<Subscription>>,
   'getAvailableMenuItems' : ActorMethod<[], Array<MenuItem>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCustomer' : ActorMethod<[bigint], Customer>,
   'getDailyBreakdown' : ActorMethod<[Time, Time], Array<DailyStats>>,
   'getExpiringSubscriptions' : ActorMethod<[], Array<Subscription>>,
   'getLowStockItems' : ActorMethod<[], Array<InventoryItem>>,
@@ -126,6 +137,10 @@ export interface _SERVICE {
   'placeOrder' : ActorMethod<[string, string, Array<OrderItem>, string], Order>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'toggleMenuItemAvailability' : ActorMethod<[bigint], MenuItem>,
+  'updateCustomer' : ActorMethod<
+    [bigint, string, string, string, string],
+    Customer
+  >,
   'updateInventoryItem' : ActorMethod<
     [bigint, string, string, number, number],
     InventoryItem

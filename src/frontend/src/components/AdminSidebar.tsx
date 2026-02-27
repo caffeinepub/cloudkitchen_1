@@ -13,6 +13,7 @@ import {
   Leaf,
   ChevronLeft,
   CalendarDays,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { to: "/menu", icon: UtensilsCrossed, label: "Menu" },
   { to: "/orders", icon: ClipboardList, label: "Orders" },
   { to: "/subscriptions", icon: CalendarDays, label: "Subscriptions" },
+  { to: "/customers", icon: Users, label: "Customers" },
   { to: "/inventory", icon: Package, label: "Inventory" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
   { to: "/kitchen", icon: Monitor, label: "Kitchen Display" },

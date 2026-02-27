@@ -34,6 +34,13 @@ export interface Order {
     customerId: Principal;
     items: Array<OrderItem>;
 }
+export interface Customer {
+    id: bigint;
+    name: string;
+    mobileNo: string;
+    preferences: string;
+    address: string;
+}
 export interface Subscription {
     id: bigint;
     customerName: string;
@@ -102,17 +109,21 @@ export enum UserRole {
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     checkAndExpireSubscriptions(): Promise<bigint>;
+    createCustomer(name: string, mobileNo: string, preferences: string, address: string): Promise<Customer>;
     createInventoryItem(name: string, unit: string, quantity: number, lowStockThreshold: number): Promise<InventoryItem>;
     createMenuItem(name: string, description: string, price: number, category: string, imageUrl: string): Promise<MenuItem>;
     createSubscription(customerName: string, customerPhone: string, plan: SubscriptionPlan, bowlSize: BowlSize, price: number): Promise<Subscription>;
+    deleteCustomer(id: bigint): Promise<void>;
     deleteInventoryItem(id: bigint): Promise<void>;
     deleteMenuItem(id: bigint): Promise<void>;
     getActiveSubscriptionCount(): Promise<bigint>;
+    getAllCustomers(): Promise<Array<Customer>>;
     getAllOrders(): Promise<Array<Order>>;
     getAllSubscriptions(): Promise<Array<Subscription>>;
     getAvailableMenuItems(): Promise<Array<MenuItem>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getCustomer(id: bigint): Promise<Customer>;
     getDailyBreakdown(startTime: Time, endTime: Time): Promise<Array<DailyStats>>;
     getExpiringSubscriptions(): Promise<Array<Subscription>>;
     getLowStockItems(): Promise<Array<InventoryItem>>;
@@ -128,6 +139,7 @@ export interface backendInterface {
     placeOrder(customerName: string, customerPhone: string, items: Array<OrderItem>, notes: string): Promise<Order>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     toggleMenuItemAvailability(id: bigint): Promise<MenuItem>;
+    updateCustomer(id: bigint, name: string, mobileNo: string, preferences: string, address: string): Promise<Customer>;
     updateInventoryItem(id: bigint, name: string, unit: string, quantity: number, lowStockThreshold: number): Promise<InventoryItem>;
     updateMenuItem(id: bigint, name: string, description: string, price: number, category: string, imageUrl: string): Promise<MenuItem>;
     updateOrderStatus(orderId: bigint, status: OrderStatus): Promise<Order>;

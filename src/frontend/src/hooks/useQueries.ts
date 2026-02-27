@@ -11,6 +11,7 @@ import {
   SubscriptionStatus,
   BowlSize,
   PaymentStatus,
+  Customer,
 } from "../backend.d";
 
 // ─── Menu ────────────────────────────────────────────────────────────────────
@@ -416,6 +417,76 @@ export function useUpdateSubscription() {
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["subscriptions"] });
+    },
+  });
+}
+
+// ─── Customers ────────────────────────────────────────────────────────────────
+export function useAllCustomers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Customer[]>({
+    queryKey: ["customers"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllCustomers();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateCustomer() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      name: string;
+      mobileNo: string;
+      preferences: string;
+      address: string;
+    }) =>
+      actor!.createCustomer(
+        data.name,
+        data.mobileNo,
+        data.preferences,
+        data.address
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customers"] });
+    },
+  });
+}
+
+export function useUpdateCustomer() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      id: bigint;
+      name: string;
+      mobileNo: string;
+      preferences: string;
+      address: string;
+    }) =>
+      actor!.updateCustomer(
+        data.id,
+        data.name,
+        data.mobileNo,
+        data.preferences,
+        data.address
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customers"] });
+    },
+  });
+}
+
+export function useDeleteCustomer() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: bigint) => actor!.deleteCustomer(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customers"] });
     },
   });
 }

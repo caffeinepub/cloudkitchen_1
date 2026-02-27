@@ -13,6 +13,13 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const Customer = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'mobileNo' : IDL.Text,
+  'preferences' : IDL.Text,
+  'address' : IDL.Text,
+});
 export const InventoryItem = IDL.Record({
   'id' : IDL.Nat,
   'lowStockThreshold' : IDL.Float64,
@@ -105,6 +112,11 @@ export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'checkAndExpireSubscriptions' : IDL.Func([], [IDL.Nat], []),
+  'createCustomer' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [Customer],
+      [],
+    ),
   'createInventoryItem' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Float64, IDL.Float64],
       [InventoryItem],
@@ -120,14 +132,17 @@ export const idlService = IDL.Service({
       [Subscription],
       [],
     ),
+  'deleteCustomer' : IDL.Func([IDL.Nat], [], []),
   'deleteInventoryItem' : IDL.Func([IDL.Nat], [], []),
   'deleteMenuItem' : IDL.Func([IDL.Nat], [], []),
   'getActiveSubscriptionCount' : IDL.Func([], [IDL.Nat], ['query']),
+  'getAllCustomers' : IDL.Func([], [IDL.Vec(Customer)], ['query']),
   'getAllOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
   'getAllSubscriptions' : IDL.Func([], [IDL.Vec(Subscription)], ['query']),
   'getAvailableMenuItems' : IDL.Func([], [IDL.Vec(MenuItem)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getCustomer' : IDL.Func([IDL.Nat], [Customer], ['query']),
   'getDailyBreakdown' : IDL.Func(
       [Time, Time],
       [IDL.Vec(DailyStats)],
@@ -160,6 +175,11 @@ export const idlService = IDL.Service({
     ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'toggleMenuItemAvailability' : IDL.Func([IDL.Nat], [MenuItem], []),
+  'updateCustomer' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [Customer],
+      [],
+    ),
   'updateInventoryItem' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Float64, IDL.Float64],
       [InventoryItem],
@@ -191,6 +211,13 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const Customer = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'mobileNo' : IDL.Text,
+    'preferences' : IDL.Text,
+    'address' : IDL.Text,
   });
   const InventoryItem = IDL.Record({
     'id' : IDL.Nat,
@@ -281,6 +308,11 @@ export const idlFactory = ({ IDL }) => {
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'checkAndExpireSubscriptions' : IDL.Func([], [IDL.Nat], []),
+    'createCustomer' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [Customer],
+        [],
+      ),
     'createInventoryItem' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Float64, IDL.Float64],
         [InventoryItem],
@@ -296,14 +328,17 @@ export const idlFactory = ({ IDL }) => {
         [Subscription],
         [],
       ),
+    'deleteCustomer' : IDL.Func([IDL.Nat], [], []),
     'deleteInventoryItem' : IDL.Func([IDL.Nat], [], []),
     'deleteMenuItem' : IDL.Func([IDL.Nat], [], []),
     'getActiveSubscriptionCount' : IDL.Func([], [IDL.Nat], ['query']),
+    'getAllCustomers' : IDL.Func([], [IDL.Vec(Customer)], ['query']),
     'getAllOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
     'getAllSubscriptions' : IDL.Func([], [IDL.Vec(Subscription)], ['query']),
     'getAvailableMenuItems' : IDL.Func([], [IDL.Vec(MenuItem)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCustomer' : IDL.Func([IDL.Nat], [Customer], ['query']),
     'getDailyBreakdown' : IDL.Func(
         [Time, Time],
         [IDL.Vec(DailyStats)],
@@ -340,6 +375,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'toggleMenuItemAvailability' : IDL.Func([IDL.Nat], [MenuItem], []),
+    'updateCustomer' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [Customer],
+        [],
+      ),
     'updateInventoryItem' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Float64, IDL.Float64],
         [InventoryItem],
