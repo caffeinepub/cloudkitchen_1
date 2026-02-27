@@ -8,10 +8,12 @@ import {
   Clock,
   AlertTriangle,
   ArrowRight,
+  CalendarDays,
 } from "lucide-react";
 import { useAllOrders } from "../hooks/useQueries";
 import { useLowStockItems } from "../hooks/useQueries";
 import { useRevenueAndOrderCount } from "../hooks/useQueries";
+import { useActiveSubscriptionCount } from "../hooks/useQueries";
 import { StatusBadge } from "../components/StatusBadge";
 import { OrderStatus, Order } from "../backend.d";
 import { Link } from "@tanstack/react-router";
@@ -64,6 +66,7 @@ function StatCard({
 export default function Dashboard() {
   const { data: orders, isLoading: ordersLoading } = useAllOrders();
   const { data: lowStock, isLoading: stockLoading } = useLowStockItems();
+  const { data: activeSubCount, isLoading: subLoading } = useActiveSubscriptionCount();
 
   // Today's time range
   const { startOfDay, endOfDay } = useMemo(() => {
@@ -124,7 +127,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Today's Revenue"
           value={statsLoading ? "—" : formatCurrency(todayStats?.revenue ?? 0)}
@@ -147,6 +150,14 @@ export default function Dashboard() {
           sub="active now"
           loading={ordersLoading}
           accentClass={pendingOrders.length > 5 ? "bg-destructive/10" : "bg-primary/10"}
+        />
+        <StatCard
+          title="Active Subscriptions"
+          value={subLoading ? "—" : Number(activeSubCount ?? 0n)}
+          icon={CalendarDays}
+          sub="subscribers"
+          loading={subLoading}
+          accentClass="bg-primary/10"
         />
         <StatCard
           title="Low Stock Alerts"

@@ -1,33 +1,73 @@
 # SaladStation
 
 ## Current State
-The app uses Internet Identity authentication. The `AdminGuard` component gates all kitchen routes behind login. If not logged in, it shows the Login page. If logged in but no profile, it shows AdminSetup. If logged in but not admin, it shows "Access Denied". The backend enforces admin-only access on all management endpoints using role-based access control.
+The app already has a basic subscription system with:
+- `Subscription` type: id, customerName, customerPhone, plan (weekly/monthly), startDate, status (active/paused/cancelled), totalDeliveriesMade
+- Backend functions: createSubscription, getAllSubscriptions, updateSubscriptionStatus, getActiveSubscriptionCount
+- Frontend: Subscriptions admin page (table with pause/resume/cancel), SubscribePage (public signup)
+- Plans: Weekly (6 bowls/week), Monthly (24 bowls/month)
 
 ## Requested Changes (Diff)
 
 ### Add
-- Nothing new
+- **endDate** field to Subscription (computed from startDate + plan duration: 7 days for weekly, 30 days for monthly)
+- **bowlSize** field to Subscription (small / medium / large)
+- **price** field to Subscription (stored at time of creation)
+- **paymentStatus** field to Subscription (pending / paid / overdue)
+- **`expired`** status to SubscriptionStatus (in addition to active/paused/cancelled)
+- Backend function `checkAndExpireSubscriptions` -- marks active/paused subscriptions as expired if endDate has passed
+- Backend function `getExpiringSubscriptions` -- returns subscriptions expiring within 2 days (for alerts)
+- Backend function `updateSubscription` -- allows admin to edit bowl size, price, payment status
+- Frontend: Expiry alert banner on Subscriptions page showing count of subscriptions expiring in 2 days
+- Frontend: "Expired" stat card and expired status badge (red/gray)
+- Frontend: Bowl size, price, payment status, and end date columns in the subscriptions table
+- Frontend: Edit dialog for updating bowl size, price, payment status
+- Frontend: Auto-refresh to run expiry check on page load and periodically
+- Public SubscribePage: Add bowl size selector, price display per plan, and payment status collection (defaults to pending)
 
 ### Modify
-- Backend: Remove admin permission checks from all management endpoints (menu, orders, inventory, analytics). All endpoints become open/public. Keep `placeOrder` and `getAvailableMenuItems` as-is (already public). Remove user profile and role management entirely or make them no-ops.
-- Frontend `App.tsx`: Remove `AdminGuard` component. The admin layout route renders `AdminLayout` + `<Outlet />` directly, with no auth check.
-- Frontend: Remove `Login.tsx` and `AdminSetup.tsx` pages (no longer needed).
-- Frontend hooks: Remove `useIsAdmin`, `useUserProfile`, `useSaveUserProfile`, `useAssignAdminRole` from `useQueries.ts` since auth is gone.
+- `createSubscription` backend: accept bowlSize, price, paymentStatus, and calculate endDate from startDate + plan duration
+- `Subscription` type: add endDate, bowlSize, price, paymentStatus fields
+- SubscribePage frontend: add bowl size selection (small/medium/large) to signup form
+- Subscriptions admin table: show end date, bowl size, price, payment status columns; add "Expired" filter tab; call expiry check on load
 
 ### Remove
-- Login page and route
-- AdminSetup page
-- AdminGuard component
-- Authentication-related query hooks
+- Nothing removed
 
 ## Implementation Plan
-1. Regenerate backend without auth/roles -- all management endpoints are open
-2. Update `App.tsx` to remove AdminGuard, show dashboard directly
-3. Remove Login.tsx and AdminSetup.tsx
-4. Remove auth hooks from useQueries.ts
-5. Fix any TypeScript errors from removed imports
+1. Update backend Motoko:
+   - Add BowlSize variant (small/medium/large)
+   - Add PaymentStatus variant (pending/paid/overdue)
+   - Add `expired` to SubscriptionStatus
+   - Add endDate, bowlSize, price, paymentStatus fields to Subscription
+   - Update createSubscription to accept bowlSize and price, compute endDate, set paymentStatus
+   - Add checkAndExpireSubscriptions (public, no auth -- called by frontend on load)
+   - Add getExpiringSubscriptions (admin) -- returns subs where endDate is within 2 days
+   - Add updateSubscription (admin) -- edits bowlSize, price, paymentStatus
+
+2. Update frontend hooks in useQueries.ts:
+   - Update createSubscription mutation params
+   - Add useCheckAndExpireSubscriptions (mutation)
+   - Add useExpiringSubscriptions (query)
+   - Add useUpdateSubscription mutation
+
+3. Update Subscriptions admin page:
+   - Call checkAndExpireSubscriptions on mount
+   - Show expiry alert banner if any subs expiring in <=2 days
+   - Add Expired stat card
+   - Add end date, bowl size, price, payment status to table
+   - Add edit dialog for bowl size, price, payment status
+   - Add Expired status badge
+
+4. Update SubscribePage:
+   - Add bowl size selector
+   - Show price per plan (admin sets prices, or default pricing shown)
+   - Include bowlSize in createSubscription call
 
 ## UX Notes
-- The app opens directly to the dashboard -- no login, no setup, no access denied screens
-- Customer `/order` route remains public as-is
-- Kitchen display at `/kitchen` remains public as-is
+- Expiry alert banner should be prominent (amber/warning color) at top of Subscriptions page
+- Expired subscriptions should be visually distinct (muted/gray) in the table
+- Bowl sizes: Small, Medium, Large
+- Payment status badges: Pending (amber), Paid (green), Overdue (red)
+- End date shown in table; subs expiring in 2 days highlighted with warning color
+- Price displayed in Indian Rupee (₹) format or plain number -- store as Float

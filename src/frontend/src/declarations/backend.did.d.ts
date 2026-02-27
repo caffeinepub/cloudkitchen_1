@@ -10,6 +10,9 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type BowlSize = { 'large' : null } |
+  { 'small' : null } |
+  { 'medium' : null };
 export interface DailyStats {
   'revenue' : number,
   'date' : Time,
@@ -52,6 +55,28 @@ export type OrderStatus = { 'new' : null } |
   { 'cancelled' : null } |
   { 'delivered' : null } |
   { 'ready' : null };
+export type PaymentStatus = { 'pending' : null } |
+  { 'paid' : null } |
+  { 'overdue' : null };
+export interface Subscription {
+  'id' : bigint,
+  'customerName' : string,
+  'status' : SubscriptionStatus,
+  'paymentStatus' : PaymentStatus,
+  'endDate' : Time,
+  'customerPhone' : string,
+  'plan' : SubscriptionPlan,
+  'price' : number,
+  'bowlSize' : BowlSize,
+  'totalDeliveriesMade' : bigint,
+  'startDate' : Time,
+}
+export type SubscriptionPlan = { 'monthly' : null } |
+  { 'weekly' : null };
+export type SubscriptionStatus = { 'active' : null } |
+  { 'cancelled' : null } |
+  { 'expired' : null } |
+  { 'paused' : null };
 export type Time = bigint;
 export interface TopSellingItem {
   'menuItemName' : string,
@@ -65,6 +90,7 @@ export type UserRole = { 'admin' : null } |
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'checkAndExpireSubscriptions' : ActorMethod<[], bigint>,
   'createInventoryItem' : ActorMethod<
     [string, string, number, number],
     InventoryItem
@@ -73,13 +99,20 @@ export interface _SERVICE {
     [string, string, number, string, string],
     MenuItem
   >,
+  'createSubscription' : ActorMethod<
+    [string, string, SubscriptionPlan, BowlSize, number],
+    Subscription
+  >,
   'deleteInventoryItem' : ActorMethod<[bigint], undefined>,
   'deleteMenuItem' : ActorMethod<[bigint], undefined>,
+  'getActiveSubscriptionCount' : ActorMethod<[], bigint>,
   'getAllOrders' : ActorMethod<[], Array<Order>>,
+  'getAllSubscriptions' : ActorMethod<[], Array<Subscription>>,
   'getAvailableMenuItems' : ActorMethod<[], Array<MenuItem>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDailyBreakdown' : ActorMethod<[Time, Time], Array<DailyStats>>,
+  'getExpiringSubscriptions' : ActorMethod<[], Array<Subscription>>,
   'getLowStockItems' : ActorMethod<[], Array<InventoryItem>>,
   'getOrder' : ActorMethod<[bigint], Order>,
   'getOrdersByStatus' : ActorMethod<[OrderStatus], Array<Order>>,
@@ -103,6 +136,14 @@ export interface _SERVICE {
   >,
   'updateOrderStatus' : ActorMethod<[bigint, OrderStatus], Order>,
   'updateStockLevel' : ActorMethod<[bigint, number], InventoryItem>,
+  'updateSubscription' : ActorMethod<
+    [bigint, BowlSize, number, PaymentStatus],
+    Subscription
+  >,
+  'updateSubscriptionStatus' : ActorMethod<
+    [bigint, SubscriptionStatus],
+    Subscription
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

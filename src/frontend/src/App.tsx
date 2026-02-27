@@ -14,6 +14,8 @@ import Inventory from "./pages/Inventory";
 import Analytics from "./pages/Analytics";
 import KitchenDisplay from "./pages/KitchenDisplay";
 import CustomerOrder from "./pages/CustomerOrder";
+import SubscribePage from "./pages/SubscribePage";
+import Subscriptions from "./pages/Subscriptions";
 
 // Admin layout — no authentication required, open access
 function AdminGuard() {
@@ -39,6 +41,12 @@ const orderRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/order",
   component: CustomerOrder,
+});
+
+const subscribeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/subscribe",
+  component: SubscribePage,
 });
 
 const kitchenRoute = createRoute({
@@ -84,8 +92,15 @@ const analyticsRoute = createRoute({
   component: Analytics,
 });
 
+const subscriptionsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/subscriptions",
+  component: Subscriptions,
+});
+
 const routeTree = rootRoute.addChildren([
   orderRoute,
+  subscribeRoute,
   kitchenRoute,
   adminLayoutRoute.addChildren([
     dashboardRoute,
@@ -93,6 +108,7 @@ const routeTree = rootRoute.addChildren([
     ordersRoute,
     inventoryRoute,
     analyticsRoute,
+    subscriptionsRoute,
   ]),
 ]);
 

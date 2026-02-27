@@ -6,6 +6,11 @@ import {
   OrderStatus,
   InventoryItem,
   OrderItem,
+  Subscription,
+  SubscriptionPlan,
+  SubscriptionStatus,
+  BowlSize,
+  PaymentStatus,
 } from "../backend.d";
 
 // ─── Menu ────────────────────────────────────────────────────────────────────
@@ -304,4 +309,114 @@ export function useTopSellingItems(limit: bigint) {
   });
 }
 
+// ─── Subscriptions ────────────────────────────────────────────────────────────
+export function useAllSubscriptions() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Subscription[]>({
+    queryKey: ["subscriptions"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllSubscriptions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useActiveSubscriptionCount() {
+  const { actor, isFetching } = useActor();
+  return useQuery<bigint>({
+    queryKey: ["activeSubscriptionCount"],
+    queryFn: async () => {
+      if (!actor) return 0n;
+      return actor.getActiveSubscriptionCount();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateSubscription() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      customerName: string;
+      customerPhone: string;
+      plan: SubscriptionPlan;
+      bowlSize: BowlSize;
+      price: number;
+    }) =>
+      actor!.createSubscription(
+        data.customerName,
+        data.customerPhone,
+        data.plan,
+        data.bowlSize,
+        data.price
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["subscriptions"] });
+      qc.invalidateQueries({ queryKey: ["activeSubscriptionCount"] });
+    },
+  });
+}
+
+export function useUpdateSubscriptionStatus() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { id: bigint; status: SubscriptionStatus }) =>
+      actor!.updateSubscriptionStatus(data.id, data.status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["subscriptions"] });
+      qc.invalidateQueries({ queryKey: ["activeSubscriptionCount"] });
+    },
+  });
+}
+
+export function useCheckAndExpireSubscriptions() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => actor!.checkAndExpireSubscriptions(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["subscriptions"] });
+      qc.invalidateQueries({ queryKey: ["activeSubscriptionCount"] });
+      qc.invalidateQueries({ queryKey: ["expiringSubscriptions"] });
+    },
+  });
+}
+
+export function useExpiringSubscriptions() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Subscription[]>({
+    queryKey: ["expiringSubscriptions"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getExpiringSubscriptions();
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useUpdateSubscription() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      id: bigint;
+      bowlSize: BowlSize;
+      price: number;
+      paymentStatus: PaymentStatus;
+    }) =>
+      actor!.updateSubscription(
+        data.id,
+        data.bowlSize,
+        data.price,
+        data.paymentStatus
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["subscriptions"] });
+    },
+  });
+}
 

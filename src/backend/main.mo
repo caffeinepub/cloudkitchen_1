@@ -1,3 +1,4 @@
+import Text "mo:core/Text";
 import Iter "mo:core/Iter";
 import Order "mo:core/Order";
 import Array "mo:core/Array";
@@ -10,7 +11,9 @@ import Int "mo:core/Int";
 import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -70,14 +73,35 @@ actor {
     totalQuantity : Nat;
   };
 
+  type BowlSize = { #small; #medium; #large };
+  type SubscriptionPlan = { #weekly; #monthly };
+  type SubscriptionStatus = { #active; #paused; #cancelled; #expired };
+  type PaymentStatus = { #pending; #paid; #overdue };
+
+  type Subscription = {
+    id : Nat;
+    customerName : Text;
+    customerPhone : Text;
+    plan : SubscriptionPlan;
+    startDate : Time.Time;
+    endDate : Time.Time;
+    bowlSize : BowlSize;
+    price : Float;
+    paymentStatus : PaymentStatus;
+    status : SubscriptionStatus;
+    totalDeliveriesMade : Nat;
+  };
+
   let userProfiles = Map.empty<Principal, UserProfile>();
   let menuItems = Map.empty<Nat, MenuItem>();
   let orders = Map.empty<Nat, Order>();
   let inventory = Map.empty<Nat, InventoryItem>();
+  let subscriptions = Map.empty<Nat, Subscription>();
 
   var nextMenuItemId = 1;
   var nextOrderId = 1;
   var nextInventoryItemId = 1;
+  var nextSubscriptionId = 1;
 
   // -------------------------------
   // User Profile Management
@@ -527,5 +551,176 @@ actor {
     );
 
     result.sort(func(a, b) { Int.compare(a.date, b.date) });
+  };
+
+  // -------------------------------
+  // Subscription Management (v2)
+  // -------------------------------
+
+  // Create Subscription (no auth required)
+  public shared ({ caller }) func createSubscription(
+    customerName : Text,
+    customerPhone : Text,
+    plan : SubscriptionPlan,
+    bowlSize : BowlSize,
+    price : Float,
+  ) : async Subscription {
+    if (customerName == "" or customerPhone == "") {
+      Runtime.trap("Customer name and phone are required");
+    };
+
+    let now = Time.now();
+    let endDate = switch (plan) {
+      case (#weekly) {
+        now + (7 * 24 * 60 * 60 * 1_000_000_000);
+      };
+      case (#monthly) {
+        now + (30 * 24 * 60 * 60 * 1_000_000_000);
+      };
+    };
+
+    let subscription : Subscription = {
+      id = nextSubscriptionId;
+      customerName;
+      customerPhone;
+      plan;
+      startDate = now;
+      endDate;
+      bowlSize;
+      price;
+      paymentStatus = #pending;
+      status = #active;
+      totalDeliveriesMade = 0;
+    };
+
+    subscriptions.add(nextSubscriptionId, subscription);
+    nextSubscriptionId += 1;
+    subscription;
+  };
+
+  // Get All Subscriptions (Admin only)
+  public query ({ caller }) func getAllSubscriptions() : async [Subscription] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    subscriptions.values().toArray();
+  };
+
+  // Update Subscription Status (Admin only)
+  public shared ({ caller }) func updateSubscriptionStatus(id : Nat, status : SubscriptionStatus) : async Subscription {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (subscriptions.get(id)) {
+      case (null) { Runtime.trap("Subscription not found") };
+      case (?existing) {
+        let updated : Subscription = {
+          id = existing.id;
+          customerName = existing.customerName;
+          customerPhone = existing.customerPhone;
+          plan = existing.plan;
+          startDate = existing.startDate;
+          endDate = existing.endDate;
+          bowlSize = existing.bowlSize;
+          price = existing.price;
+          paymentStatus = existing.paymentStatus;
+          status;
+          totalDeliveriesMade = existing.totalDeliveriesMade;
+        };
+        subscriptions.add(id, updated);
+        updated;
+      };
+    };
+  };
+
+  // Update Subscription (Admin only)
+  public shared ({ caller }) func updateSubscription(
+    id : Nat,
+    bowlSize : BowlSize,
+    price : Float,
+    paymentStatus : PaymentStatus,
+  ) : async Subscription {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (subscriptions.get(id)) {
+      case (null) { Runtime.trap("Subscription not found") };
+      case (?existing) {
+        let updated : Subscription = {
+          id = existing.id;
+          customerName = existing.customerName;
+          customerPhone = existing.customerPhone;
+          plan = existing.plan;
+          startDate = existing.startDate;
+          endDate = existing.endDate;
+          bowlSize;
+          price;
+          paymentStatus;
+          status = existing.status;
+          totalDeliveriesMade = existing.totalDeliveriesMade;
+        };
+        subscriptions.add(id, updated);
+        updated;
+      };
+    };
+  };
+
+  // Check and Expire Subscriptions (no auth required)
+  public shared ({ caller }) func checkAndExpireSubscriptions() : async Nat {
+    var expiredCount = 0;
+    let now = Time.now();
+
+    subscriptions.forEach(
+      func(id, subscription) {
+        if ((subscription.status == #active or subscription.status == #paused) and now >= subscription.endDate) {
+          let updated : Subscription = {
+            id = subscription.id;
+            customerName = subscription.customerName;
+            customerPhone = subscription.customerPhone;
+            plan = subscription.plan;
+            startDate = subscription.startDate;
+            endDate = subscription.endDate;
+            bowlSize = subscription.bowlSize;
+            price = subscription.price;
+            paymentStatus = subscription.paymentStatus;
+            status = #expired;
+            totalDeliveriesMade = subscription.totalDeliveriesMade;
+          };
+          subscriptions.add(id, updated);
+          expiredCount += 1;
+        };
+      }
+    );
+    expiredCount;
+  };
+
+  // Get Expiring Subscriptions (Admin only)
+  public query ({ caller }) func getExpiringSubscriptions() : async [Subscription] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    let now = Time.now();
+    let twoDaysInNanos = 172_800_000_000_000;
+
+    subscriptions.values().toArray().filter(
+      func(s) {
+        (s.status == #active or s.status == #paused)
+        and (s.endDate - now <= twoDaysInNanos and s.endDate - now > 0)
+      }
+    );
+  };
+
+  public query ({ caller }) func getActiveSubscriptionCount() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    subscriptions.values().toArray().filter(
+      func(s) { s.status == #active }
+    ).size();
   };
 };

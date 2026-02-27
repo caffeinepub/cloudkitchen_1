@@ -29,6 +29,40 @@ export const MenuItem = IDL.Record({
   'category' : IDL.Text,
   'price' : IDL.Float64,
 });
+export const SubscriptionPlan = IDL.Variant({
+  'monthly' : IDL.Null,
+  'weekly' : IDL.Null,
+});
+export const BowlSize = IDL.Variant({
+  'large' : IDL.Null,
+  'small' : IDL.Null,
+  'medium' : IDL.Null,
+});
+export const SubscriptionStatus = IDL.Variant({
+  'active' : IDL.Null,
+  'cancelled' : IDL.Null,
+  'expired' : IDL.Null,
+  'paused' : IDL.Null,
+});
+export const PaymentStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'paid' : IDL.Null,
+  'overdue' : IDL.Null,
+});
+export const Time = IDL.Int;
+export const Subscription = IDL.Record({
+  'id' : IDL.Nat,
+  'customerName' : IDL.Text,
+  'status' : SubscriptionStatus,
+  'paymentStatus' : PaymentStatus,
+  'endDate' : Time,
+  'customerPhone' : IDL.Text,
+  'plan' : SubscriptionPlan,
+  'price' : IDL.Float64,
+  'bowlSize' : BowlSize,
+  'totalDeliveriesMade' : IDL.Nat,
+  'startDate' : Time,
+});
 export const OrderStatus = IDL.Variant({
   'new' : IDL.Null,
   'preparing' : IDL.Null,
@@ -36,7 +70,6 @@ export const OrderStatus = IDL.Variant({
   'delivered' : IDL.Null,
   'ready' : IDL.Null,
 });
-export const Time = IDL.Int;
 export const OrderItem = IDL.Record({
   'quantity' : IDL.Nat,
   'unitPrice' : IDL.Float64,
@@ -71,6 +104,7 @@ export const TopSellingItem = IDL.Record({
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'checkAndExpireSubscriptions' : IDL.Func([], [IDL.Nat], []),
   'createInventoryItem' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Float64, IDL.Float64],
       [InventoryItem],
@@ -81,9 +115,16 @@ export const idlService = IDL.Service({
       [MenuItem],
       [],
     ),
+  'createSubscription' : IDL.Func(
+      [IDL.Text, IDL.Text, SubscriptionPlan, BowlSize, IDL.Float64],
+      [Subscription],
+      [],
+    ),
   'deleteInventoryItem' : IDL.Func([IDL.Nat], [], []),
   'deleteMenuItem' : IDL.Func([IDL.Nat], [], []),
+  'getActiveSubscriptionCount' : IDL.Func([], [IDL.Nat], ['query']),
   'getAllOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
+  'getAllSubscriptions' : IDL.Func([], [IDL.Vec(Subscription)], ['query']),
   'getAvailableMenuItems' : IDL.Func([], [IDL.Vec(MenuItem)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
@@ -92,6 +133,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(DailyStats)],
       ['query'],
     ),
+  'getExpiringSubscriptions' : IDL.Func([], [IDL.Vec(Subscription)], ['query']),
   'getLowStockItems' : IDL.Func([], [IDL.Vec(InventoryItem)], ['query']),
   'getOrder' : IDL.Func([IDL.Nat], [Order], ['query']),
   'getOrdersByStatus' : IDL.Func([OrderStatus], [IDL.Vec(Order)], ['query']),
@@ -130,6 +172,16 @@ export const idlService = IDL.Service({
     ),
   'updateOrderStatus' : IDL.Func([IDL.Nat, OrderStatus], [Order], []),
   'updateStockLevel' : IDL.Func([IDL.Nat, IDL.Float64], [InventoryItem], []),
+  'updateSubscription' : IDL.Func(
+      [IDL.Nat, BowlSize, IDL.Float64, PaymentStatus],
+      [Subscription],
+      [],
+    ),
+  'updateSubscriptionStatus' : IDL.Func(
+      [IDL.Nat, SubscriptionStatus],
+      [Subscription],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -156,6 +208,40 @@ export const idlFactory = ({ IDL }) => {
     'category' : IDL.Text,
     'price' : IDL.Float64,
   });
+  const SubscriptionPlan = IDL.Variant({
+    'monthly' : IDL.Null,
+    'weekly' : IDL.Null,
+  });
+  const BowlSize = IDL.Variant({
+    'large' : IDL.Null,
+    'small' : IDL.Null,
+    'medium' : IDL.Null,
+  });
+  const SubscriptionStatus = IDL.Variant({
+    'active' : IDL.Null,
+    'cancelled' : IDL.Null,
+    'expired' : IDL.Null,
+    'paused' : IDL.Null,
+  });
+  const PaymentStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'paid' : IDL.Null,
+    'overdue' : IDL.Null,
+  });
+  const Time = IDL.Int;
+  const Subscription = IDL.Record({
+    'id' : IDL.Nat,
+    'customerName' : IDL.Text,
+    'status' : SubscriptionStatus,
+    'paymentStatus' : PaymentStatus,
+    'endDate' : Time,
+    'customerPhone' : IDL.Text,
+    'plan' : SubscriptionPlan,
+    'price' : IDL.Float64,
+    'bowlSize' : BowlSize,
+    'totalDeliveriesMade' : IDL.Nat,
+    'startDate' : Time,
+  });
   const OrderStatus = IDL.Variant({
     'new' : IDL.Null,
     'preparing' : IDL.Null,
@@ -163,7 +249,6 @@ export const idlFactory = ({ IDL }) => {
     'delivered' : IDL.Null,
     'ready' : IDL.Null,
   });
-  const Time = IDL.Int;
   const OrderItem = IDL.Record({
     'quantity' : IDL.Nat,
     'unitPrice' : IDL.Float64,
@@ -195,6 +280,7 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'checkAndExpireSubscriptions' : IDL.Func([], [IDL.Nat], []),
     'createInventoryItem' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Float64, IDL.Float64],
         [InventoryItem],
@@ -205,15 +291,27 @@ export const idlFactory = ({ IDL }) => {
         [MenuItem],
         [],
       ),
+    'createSubscription' : IDL.Func(
+        [IDL.Text, IDL.Text, SubscriptionPlan, BowlSize, IDL.Float64],
+        [Subscription],
+        [],
+      ),
     'deleteInventoryItem' : IDL.Func([IDL.Nat], [], []),
     'deleteMenuItem' : IDL.Func([IDL.Nat], [], []),
+    'getActiveSubscriptionCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getAllOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
+    'getAllSubscriptions' : IDL.Func([], [IDL.Vec(Subscription)], ['query']),
     'getAvailableMenuItems' : IDL.Func([], [IDL.Vec(MenuItem)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDailyBreakdown' : IDL.Func(
         [Time, Time],
         [IDL.Vec(DailyStats)],
+        ['query'],
+      ),
+    'getExpiringSubscriptions' : IDL.Func(
+        [],
+        [IDL.Vec(Subscription)],
         ['query'],
       ),
     'getLowStockItems' : IDL.Func([], [IDL.Vec(InventoryItem)], ['query']),
@@ -254,6 +352,16 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateOrderStatus' : IDL.Func([IDL.Nat, OrderStatus], [Order], []),
     'updateStockLevel' : IDL.Func([IDL.Nat, IDL.Float64], [InventoryItem], []),
+    'updateSubscription' : IDL.Func(
+        [IDL.Nat, BowlSize, IDL.Float64, PaymentStatus],
+        [Subscription],
+        [],
+      ),
+    'updateSubscriptionStatus' : IDL.Func(
+        [IDL.Nat, SubscriptionStatus],
+        [Subscription],
+        [],
+      ),
   });
 };
 

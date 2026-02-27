@@ -30,6 +30,8 @@ import {
   Loader2,
   UtensilsCrossed,
   X,
+  Salad,
+  ArrowRight,
 } from "lucide-react";
 import { useAvailableMenuItems, usePlaceOrder } from "../hooks/useQueries";
 import { MenuItem } from "../backend.d";
@@ -340,6 +342,30 @@ export default function CustomerOrder() {
             <p className="text-muted-foreground font-body text-sm mt-0.5">
               Fresh, healthy salads made to order
             </p>
+          </div>
+
+          {/* Subscription Banner */}
+          <div className="mb-5 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 flex items-center justify-between gap-3 animate-slide-up">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg ember-gradient flex items-center justify-center shrink-0">
+                <Salad className="w-4 h-4 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display font-bold text-foreground text-sm">
+                  Want salads every week?
+                </p>
+                <p className="font-body text-xs text-muted-foreground">
+                  Subscribe and get 6 fresh bowls weekly or 24 monthly.
+                </p>
+              </div>
+            </div>
+            <a
+              href="/subscribe"
+              className="shrink-0 inline-flex items-center gap-1 text-xs font-body font-semibold text-primary hover:underline"
+            >
+              View Plans
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
           </div>
 
           {/* Category filter */}

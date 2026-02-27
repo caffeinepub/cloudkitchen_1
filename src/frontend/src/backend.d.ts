@@ -7,22 +7,6 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface InventoryItem {
-    id: bigint;
-    lowStockThreshold: number;
-    name: string;
-    unit: string;
-    quantity: number;
-}
-export interface MenuItem {
-    id: bigint;
-    name: string;
-    isAvailable: boolean;
-    description: string;
-    imageUrl: string;
-    category: string;
-    price: number;
-}
 export type Time = bigint;
 export interface DailyStats {
     revenue: number;
@@ -50,9 +34,43 @@ export interface Order {
     customerId: Principal;
     items: Array<OrderItem>;
 }
+export interface Subscription {
+    id: bigint;
+    customerName: string;
+    status: SubscriptionStatus;
+    paymentStatus: PaymentStatus;
+    endDate: Time;
+    customerPhone: string;
+    plan: SubscriptionPlan;
+    price: number;
+    bowlSize: BowlSize;
+    totalDeliveriesMade: bigint;
+    startDate: Time;
+}
+export interface MenuItem {
+    id: bigint;
+    name: string;
+    isAvailable: boolean;
+    description: string;
+    imageUrl: string;
+    category: string;
+    price: number;
+}
+export interface InventoryItem {
+    id: bigint;
+    lowStockThreshold: number;
+    name: string;
+    unit: string;
+    quantity: number;
+}
 export interface UserProfile {
     name: string;
     phone: string;
+}
+export enum BowlSize {
+    large = "large",
+    small = "small",
+    medium = "medium"
 }
 export enum OrderStatus {
     new_ = "new",
@@ -61,6 +79,21 @@ export enum OrderStatus {
     delivered = "delivered",
     ready = "ready"
 }
+export enum PaymentStatus {
+    pending = "pending",
+    paid = "paid",
+    overdue = "overdue"
+}
+export enum SubscriptionPlan {
+    monthly = "monthly",
+    weekly = "weekly"
+}
+export enum SubscriptionStatus {
+    active = "active",
+    cancelled = "cancelled",
+    expired = "expired",
+    paused = "paused"
+}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -68,15 +101,20 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    checkAndExpireSubscriptions(): Promise<bigint>;
     createInventoryItem(name: string, unit: string, quantity: number, lowStockThreshold: number): Promise<InventoryItem>;
     createMenuItem(name: string, description: string, price: number, category: string, imageUrl: string): Promise<MenuItem>;
+    createSubscription(customerName: string, customerPhone: string, plan: SubscriptionPlan, bowlSize: BowlSize, price: number): Promise<Subscription>;
     deleteInventoryItem(id: bigint): Promise<void>;
     deleteMenuItem(id: bigint): Promise<void>;
+    getActiveSubscriptionCount(): Promise<bigint>;
     getAllOrders(): Promise<Array<Order>>;
+    getAllSubscriptions(): Promise<Array<Subscription>>;
     getAvailableMenuItems(): Promise<Array<MenuItem>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getDailyBreakdown(startTime: Time, endTime: Time): Promise<Array<DailyStats>>;
+    getExpiringSubscriptions(): Promise<Array<Subscription>>;
     getLowStockItems(): Promise<Array<InventoryItem>>;
     getOrder(orderId: bigint): Promise<Order>;
     getOrdersByStatus(status: OrderStatus): Promise<Array<Order>>;
@@ -94,4 +132,6 @@ export interface backendInterface {
     updateMenuItem(id: bigint, name: string, description: string, price: number, category: string, imageUrl: string): Promise<MenuItem>;
     updateOrderStatus(orderId: bigint, status: OrderStatus): Promise<Order>;
     updateStockLevel(id: bigint, quantity: number): Promise<InventoryItem>;
+    updateSubscription(id: bigint, bowlSize: BowlSize, price: number, paymentStatus: PaymentStatus): Promise<Subscription>;
+    updateSubscriptionStatus(id: bigint, status: SubscriptionStatus): Promise<Subscription>;
 }
