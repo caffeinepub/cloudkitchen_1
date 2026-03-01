@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { Outlet } from "@tanstack/react-router";
+import { useState } from "react";
 import { AdminSidebar, MobileAdminNav } from "./AdminSidebar";
 
 interface AdminLayoutProps {
@@ -22,9 +22,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <MobileAdminNav />
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
-          {children ?? <Outlet />}
-        </main>
+        <main className="flex-1 overflow-y-auto">{children ?? <Outlet />}</main>
       </div>
     </div>
   );

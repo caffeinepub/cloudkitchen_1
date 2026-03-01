@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Flame, RefreshCw, Clock } from "lucide-react";
-import { useActiveOrders } from "../hooks/useQueries";
-import { StatusBadge } from "../components/StatusBadge";
-import { OrderStatus, Order } from "../backend.d";
 import { cn } from "@/lib/utils";
+import { Clock, Flame, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { type Order, OrderStatus } from "../backend.d";
+import { StatusBadge } from "../components/StatusBadge";
+import { useActiveOrders } from "../hooks/useQueries";
 
 function OrderTicket({ order }: { order: Order }) {
   const isNew = order.status === OrderStatus.new_;
@@ -25,7 +25,7 @@ function OrderTicket({ order }: { order: Order }) {
   }, [getElapsed]);
 
   const ageMinutes = Math.floor(
-    (Date.now() - Number(order.createdAt / 1_000_000n)) / 60_000
+    (Date.now() - Number(order.createdAt / 1_000_000n)) / 60_000,
   );
 
   return (
@@ -34,7 +34,7 @@ function OrderTicket({ order }: { order: Order }) {
         "kitchen-card transition-all",
         isNew && "border-[oklch(0.82_0.19_85)/60]",
         !isNew && "border-[oklch(0.62_0.18_240)/60]",
-        ageMinutes >= 15 && "animate-pulse-ember"
+        ageMinutes >= 15 && "animate-pulse-ember",
       )}
     >
       <CardHeader className="pb-2 pt-4 px-4">
@@ -56,8 +56,8 @@ function OrderTicket({ order }: { order: Order }) {
               ageMinutes >= 15
                 ? "bg-destructive/20 text-destructive"
                 : ageMinutes >= 10
-                ? "bg-[oklch(0.82_0.19_85/15)] text-[oklch(0.82_0.19_85)]"
-                : "bg-secondary text-secondary-foreground"
+                  ? "bg-[oklch(0.82_0.19_85/15)] text-[oklch(0.82_0.19_85)]"
+                  : "bg-secondary text-secondary-foreground",
             )}
           >
             <Clock className="w-4 h-4" />
@@ -77,7 +77,7 @@ function OrderTicket({ order }: { order: Order }) {
                   "font-display text-2xl font-black min-w-[2.5rem] text-center",
                   isNew
                     ? "text-[oklch(0.82_0.19_85)]"
-                    : "text-[oklch(0.68_0.19_240)]"
+                    : "text-[oklch(0.68_0.19_240)]",
                 )}
               >
                 ×{Number(item.quantity)}
@@ -116,8 +116,7 @@ export default function KitchenDisplay() {
     if (dataUpdatedAt) setLastRefresh(new Date(dataUpdatedAt));
   }, [dataUpdatedAt]);
 
-  const newOrders =
-    orders?.filter((o) => o.status === OrderStatus.new_) ?? [];
+  const newOrders = orders?.filter((o) => o.status === OrderStatus.new_) ?? [];
   const preparingOrders =
     orders?.filter((o) => o.status === OrderStatus.preparing) ?? [];
 
@@ -142,8 +141,14 @@ export default function KitchenDisplay() {
           </div>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground font-body text-xs">
-          <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
-          {lastRefresh.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          <RefreshCw
+            className={cn("w-3.5 h-3.5", isLoading && "animate-spin")}
+          />
+          {lastRefresh.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })}
         </div>
       </div>
 
@@ -157,8 +162,12 @@ export default function KitchenDisplay() {
           <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
             <Flame className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h2 className="font-display text-2xl font-bold text-foreground">Kitchen is clear!</h2>
-          <p className="text-muted-foreground font-body mt-2">No active orders right now</p>
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            Kitchen is clear!
+          </h2>
+          <p className="text-muted-foreground font-body mt-2">
+            No active orders right now
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

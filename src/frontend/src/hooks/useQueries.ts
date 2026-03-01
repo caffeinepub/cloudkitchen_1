@@ -1,18 +1,19 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useActor } from "./useActor";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  MenuItem,
-  Order,
+  type BowlSize,
+  type Customer,
+  type InventoryItem,
+  type MenuItem,
+  type Order,
+  type OrderItem,
   OrderStatus,
-  InventoryItem,
-  OrderItem,
-  Subscription,
-  SubscriptionPlan,
-  SubscriptionStatus,
-  BowlSize,
-  PaymentStatus,
-  Customer,
+  type PaymentStatus,
+  type Plan,
+  type Subscription,
+  type SubscriptionPlan,
+  type SubscriptionStatus,
 } from "../backend.d";
+import { useAdminActor as useActor } from "./useAdminActor";
 
 // ─── Menu ────────────────────────────────────────────────────────────────────
 export function useAvailableMenuItems() {
@@ -43,7 +44,7 @@ export function useCreateMenuItem() {
         data.description,
         data.price,
         data.category,
-        data.imageUrl
+        data.imageUrl,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["menuItems"] }),
   });
@@ -67,7 +68,7 @@ export function useUpdateMenuItem() {
         data.description,
         data.price,
         data.category,
-        data.imageUrl
+        data.imageUrl,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["menuItems"] }),
   });
@@ -149,7 +150,7 @@ export function usePlaceOrder() {
         data.customerName,
         data.customerPhone,
         data.items,
-        data.notes
+        data.notes,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
   });
@@ -170,7 +171,7 @@ export function useUpdateOrderStatus() {
 
 // ─── Inventory ───────────────────────────────────────────────────────────────
 export function useInventoryItems() {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
   return useQuery<InventoryItem[]>({
     queryKey: ["inventory"],
     queryFn: async () => {
@@ -210,7 +211,7 @@ export function useCreateInventoryItem() {
         data.name,
         data.unit,
         data.quantity,
-        data.lowStockThreshold
+        data.lowStockThreshold,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
@@ -236,7 +237,7 @@ export function useUpdateInventoryItem() {
         data.name,
         data.unit,
         data.quantity,
-        data.lowStockThreshold
+        data.lowStockThreshold,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
@@ -351,7 +352,7 @@ export function useCreateSubscription() {
         data.customerPhone,
         data.plan,
         data.bowlSize,
-        data.price
+        data.price,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["subscriptions"] });
@@ -413,7 +414,7 @@ export function useUpdateSubscription() {
         data.id,
         data.bowlSize,
         data.price,
-        data.paymentStatus
+        data.paymentStatus,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["subscriptions"] });
@@ -448,7 +449,7 @@ export function useCreateCustomer() {
         data.name,
         data.mobileNo,
         data.preferences,
-        data.address
+        data.address,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customers"] });
@@ -472,7 +473,7 @@ export function useUpdateCustomer() {
         data.name,
         data.mobileNo,
         data.preferences,
-        data.address
+        data.address,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customers"] });
@@ -491,3 +492,95 @@ export function useDeleteCustomer() {
   });
 }
 
+// ─── Plans ────────────────────────────────────────────────────────────────────
+export function useAllPlans() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Plan[]>({
+    queryKey: ["plans"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllPlans();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreatePlan() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      name: string;
+      planType: SubscriptionPlan;
+      price250gm: number;
+      price350gm: number;
+      price500gm: number;
+    }) =>
+      actor!.createPlan(
+        data.name,
+        data.planType,
+        data.price250gm,
+        data.price350gm,
+        data.price500gm,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      qc.invalidateQueries({ queryKey: ["planEnrollments"] });
+    },
+  });
+}
+
+export function useUpdatePlan() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      id: bigint;
+      name: string;
+      planType: SubscriptionPlan;
+      price250gm: number;
+      price350gm: number;
+      price500gm: number;
+      isActive: boolean;
+    }) =>
+      actor!.updatePlan(
+        data.id,
+        data.name,
+        data.planType,
+        data.price250gm,
+        data.price350gm,
+        data.price500gm,
+        data.isActive,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      qc.invalidateQueries({ queryKey: ["planEnrollments"] });
+    },
+  });
+}
+
+export function useDeletePlan() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: bigint) => actor!.deletePlan(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      qc.invalidateQueries({ queryKey: ["planEnrollments"] });
+    },
+  });
+}
+
+export function usePlanEnrollmentCounts() {
+  const { actor, isFetching } = useActor();
+  return useQuery<
+    Array<{ planId: bigint; planName: string; enrolledCount: bigint }>
+  >({
+    queryKey: ["planEnrollments"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getPlanEnrollmentCounts();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}

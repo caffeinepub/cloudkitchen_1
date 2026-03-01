@@ -4,7 +4,7 @@
  * Items are added via createInventoryItem and tracked in React Query.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { InventoryItem } from "../backend.d";
+import type { InventoryItem } from "../backend.d";
 
 const INVENTORY_ALL_KEY = "inventoryAll";
 
@@ -12,8 +12,8 @@ export function useInventoryAll() {
   return useQuery<InventoryItem[]>({
     queryKey: [INVENTORY_ALL_KEY],
     queryFn: () => [],
-    staleTime: Infinity,
-    gcTime: Infinity,
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
     initialData: [],
   });
 }
@@ -34,7 +34,7 @@ export function useRemoveFromInventoryCache() {
   const qc = useQueryClient();
   return (id: bigint) => {
     qc.setQueryData<InventoryItem[]>([INVENTORY_ALL_KEY], (prev) =>
-      prev ? prev.filter((i) => i.id !== id) : []
+      prev ? prev.filter((i) => i.id !== id) : [],
     );
   };
 }

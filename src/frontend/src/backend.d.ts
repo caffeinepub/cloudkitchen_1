@@ -7,6 +7,15 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export interface Plan {
+    id: bigint;
+    name: string;
+    isActive: boolean;
+    price350gm: number;
+    price500gm: number;
+    planType: SubscriptionPlan;
+    price250gm: number;
+}
 export type Time = bigint;
 export interface DailyStats {
     revenue: number;
@@ -112,13 +121,16 @@ export interface backendInterface {
     createCustomer(name: string, mobileNo: string, preferences: string, address: string): Promise<Customer>;
     createInventoryItem(name: string, unit: string, quantity: number, lowStockThreshold: number): Promise<InventoryItem>;
     createMenuItem(name: string, description: string, price: number, category: string, imageUrl: string): Promise<MenuItem>;
+    createPlan(name: string, planType: SubscriptionPlan, price250gm: number, price350gm: number, price500gm: number): Promise<Plan>;
     createSubscription(customerName: string, customerPhone: string, plan: SubscriptionPlan, bowlSize: BowlSize, price: number): Promise<Subscription>;
     deleteCustomer(id: bigint): Promise<void>;
     deleteInventoryItem(id: bigint): Promise<void>;
     deleteMenuItem(id: bigint): Promise<void>;
+    deletePlan(id: bigint): Promise<void>;
     getActiveSubscriptionCount(): Promise<bigint>;
     getAllCustomers(): Promise<Array<Customer>>;
     getAllOrders(): Promise<Array<Order>>;
+    getAllPlans(): Promise<Array<Plan>>;
     getAllSubscriptions(): Promise<Array<Subscription>>;
     getAvailableMenuItems(): Promise<Array<MenuItem>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -129,6 +141,11 @@ export interface backendInterface {
     getLowStockItems(): Promise<Array<InventoryItem>>;
     getOrder(orderId: bigint): Promise<Order>;
     getOrdersByStatus(status: OrderStatus): Promise<Array<Order>>;
+    getPlanEnrollmentCounts(): Promise<Array<{
+        planId: bigint;
+        planName: string;
+        enrolledCount: bigint;
+    }>>;
     getRevenueAndOrderCount(startTime: Time, endTime: Time): Promise<{
         revenue: number;
         orderCount: bigint;
@@ -143,6 +160,7 @@ export interface backendInterface {
     updateInventoryItem(id: bigint, name: string, unit: string, quantity: number, lowStockThreshold: number): Promise<InventoryItem>;
     updateMenuItem(id: bigint, name: string, description: string, price: number, category: string, imageUrl: string): Promise<MenuItem>;
     updateOrderStatus(orderId: bigint, status: OrderStatus): Promise<Order>;
+    updatePlan(id: bigint, name: string, planType: SubscriptionPlan, price250gm: number, price350gm: number, price500gm: number, isActive: boolean): Promise<Plan>;
     updateStockLevel(id: bigint, quantity: number): Promise<InventoryItem>;
     updateSubscription(id: bigint, bowlSize: BowlSize, price: number, paymentStatus: PaymentStatus): Promise<Subscription>;
     updateSubscriptionStatus(id: bigint, status: SubscriptionStatus): Promise<Subscription>;

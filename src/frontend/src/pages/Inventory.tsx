@@ -1,16 +1,3 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +8,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -29,22 +28,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Loader2, Package, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  AlertTriangle,
+  Edit,
+  Loader2,
+  Package,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { InventoryItem } from "../backend.d";
+import {
+  useAddToInventoryCache,
+  useInventoryAll,
+  useRemoveFromInventoryCache,
+  useUpdateInventoryCache,
+} from "../hooks/useInventoryAll";
 import {
   useCreateInventoryItem,
-  useUpdateInventoryItem,
   useDeleteInventoryItem,
+  useUpdateInventoryItem,
   useUpdateStockLevel,
 } from "../hooks/useQueries";
-import {
-  useInventoryAll,
-  useAddToInventoryCache,
-  useUpdateInventoryCache,
-  useRemoveFromInventoryCache,
-} from "../hooks/useInventoryAll";
-import { InventoryItem } from "../backend.d";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 interface InventoryFormData {
   name: string;
@@ -96,9 +103,9 @@ export default function Inventory() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const quantity = parseFloat(form.quantity);
-    const lowStockThreshold = parseFloat(form.lowStockThreshold);
-    if (isNaN(quantity) || isNaN(lowStockThreshold)) {
+    const quantity = Number.parseFloat(form.quantity);
+    const lowStockThreshold = Number.parseFloat(form.lowStockThreshold);
+    if (Number.isNaN(quantity) || Number.isNaN(lowStockThreshold)) {
       toast.error("Please enter valid numbers");
       return;
     }
@@ -143,13 +150,16 @@ export default function Inventory() {
   async function handleStockUpdate(item: InventoryItem) {
     const raw = editingStock[String(item.id)];
     if (raw === undefined) return;
-    const qty = parseFloat(raw);
-    if (isNaN(qty) || qty < 0) {
+    const qty = Number.parseFloat(raw);
+    if (Number.isNaN(qty) || qty < 0) {
       toast.error("Invalid quantity");
       return;
     }
     try {
-      const updated = await updateStock.mutateAsync({ id: item.id, quantity: qty });
+      const updated = await updateStock.mutateAsync({
+        id: item.id,
+        quantity: qty,
+      });
       updateInCache(updated);
       setEditingStock((prev) => {
         const next = { ...prev };
@@ -162,19 +172,25 @@ export default function Inventory() {
     }
   }
 
-  const lowStockItems = items?.filter((i) => i.quantity <= i.lowStockThreshold) ?? [];
+  const lowStockItems =
+    items?.filter((i) => i.quantity <= i.lowStockThreshold) ?? [];
   const isSaving = createItem.isPending || updateItem.isPending;
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Inventory</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">
+            Inventory
+          </h1>
           <p className="text-muted-foreground font-body text-sm mt-1">
             {items?.length ?? 0} items • {lowStockItems.length} low stock
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2 ember-gradient text-white border-0">
+        <Button
+          onClick={openCreate}
+          className="gap-2 ember-gradient text-white border-0"
+        >
           <Plus className="w-4 h-4" />
           Add Item
         </Button>
@@ -185,8 +201,7 @@ export default function Inventory() {
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>
             <strong>{lowStockItems.length}</strong> item
-            {lowStockItems.length > 1 ? "s are" : " is"} running low:
-            {" "}
+            {lowStockItems.length > 1 ? "s are" : " is"} running low:{" "}
             {lowStockItems.map((i) => i.name).join(", ")}
           </span>
         </div>
@@ -199,7 +214,7 @@ export default function Inventory() {
         <CardContent className="p-0">
           {items === undefined ? (
             <div className="p-4 space-y-3">
-              {(["i1","i2","i3","i4"]).map((k) => (
+              {["i1", "i2", "i3", "i4"].map((k) => (
                 <Skeleton key={k} className="h-10 w-full" />
               ))}
             </div>
@@ -236,11 +251,15 @@ export default function Inventory() {
                         key={stockKey}
                         className={cn(
                           "font-body text-sm transition-colors",
-                          isLow && "bg-destructive/5"
+                          isLow && "bg-destructive/5",
                         )}
                       >
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{item.unit}</TableCell>
+                        <TableCell className="font-medium">
+                          {item.name}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {item.unit}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {editing ? (
@@ -258,7 +277,8 @@ export default function Inventory() {
                                   }
                                   className="h-7 w-24 text-sm"
                                   onKeyDown={(e) => {
-                                    if (e.key === "Enter") handleStockUpdate(item);
+                                    if (e.key === "Enter")
+                                      handleStockUpdate(item);
                                     if (e.key === "Escape")
                                       setEditingStock((p) => {
                                         const n = { ...p };
@@ -292,7 +312,9 @@ export default function Inventory() {
                                 }
                                 className={cn(
                                   "font-mono font-bold hover:underline cursor-pointer text-left",
-                                  isLow ? "text-destructive" : "text-foreground"
+                                  isLow
+                                    ? "text-destructive"
+                                    : "text-foreground",
                                 )}
                               >
                                 {item.quantity}
@@ -310,7 +332,9 @@ export default function Inventory() {
                               Low
                             </span>
                           ) : (
-                            <span className="text-xs text-muted-foreground">OK</span>
+                            <span className="text-xs text-muted-foreground">
+                              OK
+                            </span>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
@@ -353,35 +377,47 @@ export default function Inventory() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="inv-name" className="font-body text-sm">Name *</Label>
+              <Label htmlFor="inv-name" className="font-body text-sm">
+                Name *
+              </Label>
               <Input
                 id="inv-name"
                 value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, name: e.target.value }))
+                }
                 required
                 placeholder="e.g. Chicken Breast"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="inv-unit" className="font-body text-sm">Unit *</Label>
+              <Label htmlFor="inv-unit" className="font-body text-sm">
+                Unit *
+              </Label>
               <Input
                 id="inv-unit"
                 value={form.unit}
-                onChange={(e) => setForm((p) => ({ ...p, unit: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, unit: e.target.value }))
+                }
                 required
                 placeholder="e.g. kg, L, pcs"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="inv-qty" className="font-body text-sm">Quantity *</Label>
+                <Label htmlFor="inv-qty" className="font-body text-sm">
+                  Quantity *
+                </Label>
                 <Input
                   id="inv-qty"
                   type="number"
                   step="0.01"
                   min="0"
                   value={form.quantity}
-                  onChange={(e) => setForm((p) => ({ ...p, quantity: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, quantity: e.target.value }))
+                  }
                   required
                   placeholder="0"
                 />
@@ -397,7 +433,10 @@ export default function Inventory() {
                   min="0"
                   value={form.lowStockThreshold}
                   onChange={(e) =>
-                    setForm((p) => ({ ...p, lowStockThreshold: e.target.value }))
+                    setForm((p) => ({
+                      ...p,
+                      lowStockThreshold: e.target.value,
+                    }))
                   }
                   required
                   placeholder="5"
@@ -405,10 +444,18 @@ export default function Inventory() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving} className="ember-gradient text-white border-0">
+              <Button
+                type="submit"
+                disabled={isSaving}
+                className="ember-gradient text-white border-0"
+              >
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingItem ? "Update Item" : "Add Item"}
               </Button>
@@ -418,10 +465,15 @@ export default function Inventory() {
       </Dialog>
 
       {/* Delete confirmation */}
-      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={() => setDeleteId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-xl">Delete Item?</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-xl">
+              Delete Item?
+            </AlertDialogTitle>
             <AlertDialogDescription className="font-body">
               This will permanently remove the inventory item.
             </AlertDialogDescription>
@@ -433,7 +485,9 @@ export default function Inventory() {
               onClick={() => deleteId !== null && handleDelete(deleteId)}
               disabled={deleteItem.isPending}
             >
-              {deleteItem.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {deleteItem.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

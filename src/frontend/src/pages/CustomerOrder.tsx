@@ -1,11 +1,14 @@
-import { useState, useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -15,26 +18,23 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Plus,
-  Minus,
-  ShoppingCart,
-  Leaf,
   CheckCircle2,
+  Leaf,
   Loader2,
+  Minus,
+  Plus,
+  ShoppingCart,
   UtensilsCrossed,
   X,
 } from "lucide-react";
-import { useAvailableMenuItems, usePlaceOrder } from "../hooks/useQueries";
-import { MenuItem } from "../backend.d";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import type { MenuItem } from "../backend.d";
+import { useAvailableMenuItems, usePlaceOrder } from "../hooks/useQueries";
 
 interface CartItem {
   item: MenuItem;
@@ -57,7 +57,8 @@ function MenuCard({
             alt={item.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {
-              (e.target as HTMLImageElement).parentElement!.style.display = "none";
+              (e.target as HTMLImageElement).parentElement!.style.display =
+                "none";
             }}
           />
         </div>
@@ -206,14 +207,15 @@ export default function CustomerOrder() {
   const filteredItems = useMemo(
     () =>
       menuItems?.filter(
-        (i) => filterCategory === "all" || i.category === filterCategory
+        (i) => filterCategory === "all" || i.category === filterCategory,
       ) ?? [],
-    [menuItems, filterCategory]
+    [menuItems, filterCategory],
   );
 
   const cartTotal = useMemo(
-    () => cart.reduce((sum, { item, quantity }) => sum + item.price * quantity, 0),
-    [cart]
+    () =>
+      cart.reduce((sum, { item, quantity }) => sum + item.price * quantity, 0),
+    [cart],
   );
 
   const cartCount = cart.reduce((sum, { quantity }) => sum + quantity, 0);
@@ -223,7 +225,7 @@ export default function CustomerOrder() {
       const existing = prev.find((c) => c.item.id === item.id);
       if (existing) {
         return prev.map((c) =>
-          c.item.id === item.id ? { ...c, quantity: c.quantity + 1 } : c
+          c.item.id === item.id ? { ...c, quantity: c.quantity + 1 } : c,
         );
       }
       return [...prev, { item, quantity: 1 }];
@@ -234,18 +236,16 @@ export default function CustomerOrder() {
   function increaseQuantity(id: bigint) {
     setCart((prev) =>
       prev.map((c) =>
-        c.item.id === id ? { ...c, quantity: c.quantity + 1 } : c
-      )
+        c.item.id === id ? { ...c, quantity: c.quantity + 1 } : c,
+      ),
     );
   }
 
   function decreaseQuantity(id: bigint) {
     setCart((prev) =>
       prev
-        .map((c) =>
-          c.item.id === id ? { ...c, quantity: c.quantity - 1 } : c
-        )
-        .filter((c) => c.quantity > 0)
+        .map((c) => (c.item.id === id ? { ...c, quantity: c.quantity - 1 } : c))
+        .filter((c) => c.quantity > 0),
     );
   }
 
@@ -311,7 +311,9 @@ export default function CustomerOrder() {
             </SheetTrigger>
             <SheetContent side="right" className="w-80 flex flex-col">
               <SheetHeader>
-                <SheetTitle className="font-display text-xl">Your Order</SheetTitle>
+                <SheetTitle className="font-display text-xl">
+                  Your Order
+                </SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-hidden mt-4">
                 <CartPanel
@@ -336,7 +338,9 @@ export default function CustomerOrder() {
         {/* Menu section */}
         <main className="flex-1 min-w-0 p-4 md:p-6">
           <div className="mb-4">
-            <h1 className="font-display text-3xl font-bold text-foreground">Order Online</h1>
+            <h1 className="font-display text-3xl font-bold text-foreground">
+              Order Online
+            </h1>
             <p className="text-muted-foreground font-body text-sm mt-0.5">
               Fresh, healthy salads made to order
             </p>
@@ -353,7 +357,7 @@ export default function CustomerOrder() {
                   "px-3 py-1.5 rounded text-xs font-display font-semibold tracking-wider uppercase transition-all whitespace-nowrap shrink-0",
                   filterCategory === cat
                     ? "ember-gradient text-white"
-                    : "bg-secondary text-secondary-foreground hover:bg-accent"
+                    : "bg-secondary text-secondary-foreground hover:bg-accent",
                 )}
               >
                 {cat === "all" ? "All Items" : cat}
@@ -363,7 +367,7 @@ export default function CustomerOrder() {
 
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(["m1","m2","m3","m4","m5","m6"]).map((k) => (
+              {["m1", "m2", "m3", "m4", "m5", "m6"].map((k) => (
                 <Skeleton key={k} className="h-52 rounded-md" />
               ))}
             </div>
@@ -389,7 +393,9 @@ export default function CustomerOrder() {
         {/* Desktop cart sidebar */}
         <aside className="hidden lg:flex w-80 flex-col border-l bg-card p-4 sticky top-[57px] h-[calc(100vh-57px)]">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-xl font-bold text-foreground">Your Order</h2>
+            <h2 className="font-display text-xl font-bold text-foreground">
+              Your Order
+            </h2>
             {cartCount > 0 && (
               <Badge className="ember-gradient text-white border-0 font-body">
                 {cartCount} item{cartCount !== 1 ? "s" : ""}
@@ -412,7 +418,10 @@ export default function CustomerOrder() {
       <footer className="border-t py-4 px-6 text-center">
         <p className="text-xs text-muted-foreground font-body">
           © 2026. Built with ❤️ using{" "}
-          <a href="https://caffeine.ai" className="underline hover:text-foreground transition-colors">
+          <a
+            href="https://caffeine.ai"
+            className="underline hover:text-foreground transition-colors"
+          >
             caffeine.ai
           </a>
         </p>
@@ -422,12 +431,17 @@ export default function CustomerOrder() {
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">Complete Your Order</DialogTitle>
+            <DialogTitle className="font-display text-xl">
+              Complete Your Order
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handlePlaceOrder} className="space-y-4">
             <div className="bg-secondary rounded-md p-3 space-y-1.5">
               {cart.map(({ item, quantity }) => (
-                <div key={String(item.id)} className="flex justify-between text-sm font-body">
+                <div
+                  key={String(item.id)}
+                  className="flex justify-between text-sm font-body"
+                >
                   <span className="text-foreground">
                     {quantity}× {item.name}
                   </span>
@@ -444,22 +458,30 @@ export default function CustomerOrder() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cust-name" className="font-body text-sm">Your Name *</Label>
+              <Label htmlFor="cust-name" className="font-body text-sm">
+                Your Name *
+              </Label>
               <Input
                 id="cust-name"
                 value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, name: e.target.value }))
+                }
                 required
                 placeholder="e.g. Sarah Johnson"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cust-phone" className="font-body text-sm">Phone Number *</Label>
+              <Label htmlFor="cust-phone" className="font-body text-sm">
+                Phone Number *
+              </Label>
               <Input
                 id="cust-phone"
                 type="tel"
                 value={form.phone}
-                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, phone: e.target.value }))
+                }
                 required
                 placeholder="e.g. +1 555 000 1234"
               />
@@ -471,7 +493,9 @@ export default function CustomerOrder() {
               <Textarea
                 id="cust-notes"
                 value={form.notes}
-                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, notes: e.target.value }))
+                }
                 placeholder="Allergies, preferences..."
                 rows={2}
               />
@@ -502,7 +526,10 @@ export default function CustomerOrder() {
       </Dialog>
 
       {/* Success dialog */}
-      <Dialog open={successOrder !== null} onOpenChange={() => setSuccessOrder(null)}>
+      <Dialog
+        open={successOrder !== null}
+        onOpenChange={() => setSuccessOrder(null)}
+      >
         <DialogContent className="sm:max-w-sm text-center">
           <div className="flex flex-col items-center py-6">
             <div className="w-16 h-16 rounded-full bg-[oklch(0.72_0.19_155/15)] flex items-center justify-center mb-4">
@@ -512,7 +539,8 @@ export default function CustomerOrder() {
               Order Placed!
             </h2>
             <p className="font-body text-muted-foreground text-sm mb-3">
-              Your order #{successOrder} is confirmed. Your fresh salad is being prepared!
+              Your order #{successOrder} is confirmed. Your fresh salad is being
+              prepared!
             </p>
             <Button
               className="ember-gradient text-white border-0 font-display"

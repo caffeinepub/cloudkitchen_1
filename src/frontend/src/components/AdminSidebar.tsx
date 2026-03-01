@@ -1,30 +1,32 @@
-import { useState } from "react";
-import { Link, useLocation } from "@tanstack/react-router";
-import {
-  LayoutDashboard,
-  UtensilsCrossed,
-  ClipboardList,
-  Package,
-  BarChart3,
-  Monitor,
-  LogOut,
-  Menu,
-  X,
-  Leaf,
-  ChevronLeft,
-  CalendarDays,
-  Users,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation } from "@tanstack/react-router";
+import {
+  BarChart3,
+  CalendarDays,
+  ChevronLeft,
+  ClipboardCheck,
+  ClipboardList,
+  LayoutDashboard,
+  Leaf,
+  LogOut,
+  Menu,
+  Monitor,
+  Package,
+  Users,
+  UtensilsCrossed,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
 
 const NAV_ITEMS = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/menu", icon: UtensilsCrossed, label: "Menu" },
   { to: "/orders", icon: ClipboardList, label: "Orders" },
   { to: "/subscriptions", icon: CalendarDays, label: "Subscriptions" },
+  { to: "/plans", icon: ClipboardCheck, label: "Plans" },
   { to: "/customers", icon: Users, label: "Customers" },
   { to: "/inventory", icon: Package, label: "Inventory" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
@@ -50,7 +52,7 @@ export function AdminSidebar({ collapsed, setCollapsed }: AdminSidebarProps) {
     <aside
       className={cn(
         "flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out h-full",
-        collapsed ? "w-16" : "w-56"
+        collapsed ? "w-16" : "w-56",
       )}
     >
       {/* Logo */}
@@ -75,11 +77,15 @@ export function AdminSidebar({ collapsed, setCollapsed }: AdminSidebarProps) {
           size="icon"
           className={cn(
             "h-7 w-7 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            collapsed && "mx-auto mt-1"
+            collapsed && "mx-auto mt-1",
           )}
           onClick={() => setCollapsed(!collapsed)}
         >
-          {collapsed ? <Menu className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {collapsed ? (
+            <Menu className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
         </Button>
       </div>
 
@@ -95,7 +101,7 @@ export function AdminSidebar({ collapsed, setCollapsed }: AdminSidebarProps) {
                   isActive
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  collapsed && "justify-center"
+                  collapsed && "justify-center",
                 )}
               >
                 <Icon className="w-4 h-4 shrink-0" />
@@ -114,7 +120,7 @@ export function AdminSidebar({ collapsed, setCollapsed }: AdminSidebarProps) {
           variant="ghost"
           className={cn(
             "w-full text-sidebar-foreground hover:bg-sidebar-accent hover:text-destructive transition-colors",
-            collapsed ? "justify-center px-2" : "justify-start gap-3"
+            collapsed ? "justify-center px-2" : "justify-start gap-3",
           )}
           onClick={handleSignOut}
         >
@@ -172,7 +178,7 @@ export function MobileAdminNav() {
                       "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all",
                       isActive
                         ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent",
                     )}
                   >
                     <Icon className="w-4 h-4" />

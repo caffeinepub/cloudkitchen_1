@@ -1,22 +1,22 @@
-import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "@tanstack/react-router";
 import {
-  TrendingUp,
-  ShoppingBag,
-  Clock,
   AlertTriangle,
   ArrowRight,
   CalendarDays,
+  Clock,
+  ShoppingBag,
+  TrendingUp,
 } from "lucide-react";
+import { useMemo } from "react";
+import { type Order, OrderStatus } from "../backend.d";
+import { StatusBadge } from "../components/StatusBadge";
 import { useAllOrders } from "../hooks/useQueries";
 import { useLowStockItems } from "../hooks/useQueries";
 import { useRevenueAndOrderCount } from "../hooks/useQueries";
 import { useActiveSubscriptionCount } from "../hooks/useQueries";
-import { StatusBadge } from "../components/StatusBadge";
-import { OrderStatus, Order } from "../backend.d";
-import { Link } from "@tanstack/react-router";
 
 function StatCard({
   title,
@@ -49,7 +49,9 @@ function StatCard({
               </p>
             )}
             {sub && (
-              <p className="text-xs text-muted-foreground mt-1 font-body">{sub}</p>
+              <p className="text-xs text-muted-foreground mt-1 font-body">
+                {sub}
+              </p>
             )}
           </div>
           <div
@@ -66,7 +68,8 @@ function StatCard({
 export default function Dashboard() {
   const { data: orders, isLoading: ordersLoading } = useAllOrders();
   const { data: lowStock, isLoading: stockLoading } = useLowStockItems();
-  const { data: activeSubCount, isLoading: subLoading } = useActiveSubscriptionCount();
+  const { data: activeSubCount, isLoading: subLoading } =
+    useActiveSubscriptionCount();
 
   // Today's time range
   const { startOfDay, endOfDay } = useMemo(() => {
@@ -83,15 +86,16 @@ export default function Dashboard() {
 
   const { data: todayStats, isLoading: statsLoading } = useRevenueAndOrderCount(
     startOfDay,
-    endOfDay
+    endOfDay,
   );
 
   const pendingOrders = useMemo(
     () =>
       orders?.filter(
-        (o) => o.status === OrderStatus.new_ || o.status === OrderStatus.preparing
+        (o) =>
+          o.status === OrderStatus.new_ || o.status === OrderStatus.preparing,
       ) ?? [],
-    [orders]
+    [orders],
   );
 
   const recentOrders: Order[] = useMemo(
@@ -101,21 +105,29 @@ export default function Dashboard() {
             .sort((a, b) => Number(b.createdAt - a.createdAt))
             .slice(0, 10)
         : [],
-    [orders]
+    [orders],
   );
 
   const formatCurrency = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(n);
 
   const formatTime = (ns: bigint) => {
     const ms = Number(ns / 1_000_000n);
-    return new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(ms).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Dashboard</h1>
+        <h1 className="font-display text-3xl font-bold text-foreground">
+          Dashboard
+        </h1>
         <p className="text-muted-foreground font-body text-sm mt-1">
           {new Date().toLocaleDateString("en-US", {
             weekday: "long",
@@ -149,7 +161,9 @@ export default function Dashboard() {
           icon={Clock}
           sub="active now"
           loading={ordersLoading}
-          accentClass={pendingOrders.length > 5 ? "bg-destructive/10" : "bg-primary/10"}
+          accentClass={
+            pendingOrders.length > 5 ? "bg-destructive/10" : "bg-primary/10"
+          }
         />
         <StatCard
           title="Active Subscriptions"
@@ -161,11 +175,13 @@ export default function Dashboard() {
         />
         <StatCard
           title="Low Stock Alerts"
-          value={stockLoading ? "—" : lowStock?.length ?? 0}
+          value={stockLoading ? "—" : (lowStock?.length ?? 0)}
           icon={AlertTriangle}
           sub="items need restock"
           loading={stockLoading}
-          accentClass={(lowStock?.length ?? 0) > 0 ? "bg-destructive/10" : "bg-primary/10"}
+          accentClass={
+            (lowStock?.length ?? 0) > 0 ? "bg-destructive/10" : "bg-primary/10"
+          }
         />
       </div>
 
@@ -177,18 +193,26 @@ export default function Dashboard() {
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-destructive" />
                 <span className="font-body text-sm font-medium text-destructive">
-                  {lowStock?.length} item{(lowStock?.length ?? 0) > 1 ? "s" : ""} running low on stock
+                  {lowStock?.length} item
+                  {(lowStock?.length ?? 0) > 1 ? "s" : ""} running low on stock
                 </span>
               </div>
               <Link to="/inventory">
-                <button type="button" className="flex items-center gap-1 text-xs text-primary hover:underline font-body">
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-xs text-primary hover:underline font-body"
+                >
                   Manage <ArrowRight className="w-3 h-3" />
                 </button>
               </Link>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
               {lowStock?.map((item) => (
-                <Badge key={String(item.id)} variant="destructive" className="font-body text-xs">
+                <Badge
+                  key={String(item.id)}
+                  variant="destructive"
+                  className="font-body text-xs"
+                >
                   {item.name}: {item.quantity} {item.unit}
                 </Badge>
               ))}
@@ -201,9 +225,14 @@ export default function Dashboard() {
       <Card className="kitchen-card animate-slide-up delay-200">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="font-display text-xl">Recent Orders</CardTitle>
+            <CardTitle className="font-display text-xl">
+              Recent Orders
+            </CardTitle>
             <Link to="/orders">
-              <button type="button" className="flex items-center gap-1 text-xs text-primary hover:underline font-body">
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs text-primary hover:underline font-body"
+              >
                 View all <ArrowRight className="w-3 h-3" />
               </button>
             </Link>
@@ -212,7 +241,7 @@ export default function Dashboard() {
         <CardContent className="p-0">
           {ordersLoading ? (
             <div className="p-4 space-y-3">
-              {(["s1","s2","s3","s4","s5"]).map((k) => (
+              {["s1", "s2", "s3", "s4", "s5"].map((k) => (
                 <Skeleton key={k} className="h-12 w-full" />
               ))}
             </div>
@@ -227,10 +256,14 @@ export default function Dashboard() {
                   <tr className="border-b text-xs text-muted-foreground uppercase tracking-wider">
                     <th className="text-left px-4 py-2">Order</th>
                     <th className="text-left px-4 py-2">Customer</th>
-                    <th className="text-left px-4 py-2 hidden sm:table-cell">Items</th>
+                    <th className="text-left px-4 py-2 hidden sm:table-cell">
+                      Items
+                    </th>
                     <th className="text-left px-4 py-2">Amount</th>
                     <th className="text-left px-4 py-2">Status</th>
-                    <th className="text-left px-4 py-2 hidden md:table-cell">Time</th>
+                    <th className="text-left px-4 py-2 hidden md:table-cell">
+                      Time
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -244,12 +277,17 @@ export default function Dashboard() {
                       </td>
                       <td className="px-4 py-3 font-medium">
                         <div>{order.customerName}</div>
-                        <div className="text-xs text-muted-foreground">{order.customerPhone}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {order.customerPhone}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                        {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                        {order.items.length} item
+                        {order.items.length !== 1 ? "s" : ""}
                       </td>
-                      <td className="px-4 py-3 font-medium">{formatCurrency(order.totalAmount)}</td>
+                      <td className="px-4 py-3 font-medium">
+                        {formatCurrency(order.totalAmount)}
+                      </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={order.status} />
                       </td>

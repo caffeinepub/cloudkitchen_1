@@ -1,21 +1,22 @@
-import {
-  RouterProvider,
-  createRouter,
-  createRoute,
-  createRootRoute,
-  Outlet,
-} from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
+import {
+  Outlet,
+  RouterProvider,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router";
 import { AdminLayout } from "./components/AdminLayout";
+import Analytics from "./pages/Analytics";
+import CustomerOrder from "./pages/CustomerOrder";
+import Customers from "./pages/Customers";
 import Dashboard from "./pages/Dashboard";
+import Inventory from "./pages/Inventory";
+import KitchenDisplay from "./pages/KitchenDisplay";
 import MenuManagement from "./pages/MenuManagement";
 import Orders from "./pages/Orders";
-import Inventory from "./pages/Inventory";
-import Analytics from "./pages/Analytics";
-import KitchenDisplay from "./pages/KitchenDisplay";
-import CustomerOrder from "./pages/CustomerOrder";
+import Plans from "./pages/Plans";
 import Subscriptions from "./pages/Subscriptions";
-import Customers from "./pages/Customers";
 
 // Admin layout — no authentication required, open access
 function AdminGuard() {
@@ -98,6 +99,12 @@ const customersRoute = createRoute({
   component: Customers,
 });
 
+const plansRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/plans",
+  component: Plans,
+});
+
 const routeTree = rootRoute.addChildren([
   orderRoute,
   kitchenRoute,
@@ -108,6 +115,7 @@ const routeTree = rootRoute.addChildren([
     inventoryRoute,
     analyticsRoute,
     subscriptionsRoute,
+    plansRoute,
     customersRoute,
   ]),
 ]);

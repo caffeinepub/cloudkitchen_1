@@ -1,22 +1,22 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
-  Leaf,
+  Calendar,
   CheckCircle2,
+  ChevronRight,
+  Clock,
+  Leaf,
   Loader2,
   Salad,
-  Calendar,
-  Clock,
-  ChevronRight,
 } from "lucide-react";
-import { useCreateSubscription } from "../hooks/useQueries";
-import { SubscriptionPlan, BowlSize } from "../backend.d";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { toast } from "sonner";
+import { BowlSize, SubscriptionPlan } from "../backend.d";
+import { useCreateSubscription } from "../hooks/useQueries";
 
 // ─── Price table ──────────────────────────────────────────────────────────────
 const PRICES: Record<SubscriptionPlan, Record<BowlSize, number>> = {
@@ -56,7 +56,7 @@ function PlanCard({ plan, selected, onSelect }: PlanCardProps) {
         "w-full text-left rounded-xl border-2 p-5 transition-all duration-200 group relative overflow-hidden",
         selected
           ? "border-primary bg-primary/5 shadow-md"
-          : "border-border bg-card hover:border-primary/40 hover:shadow-sm"
+          : "border-border bg-card hover:border-primary/40 hover:shadow-sm",
       )}
     >
       {isWeekly && (
@@ -69,7 +69,7 @@ function PlanCard({ plan, selected, onSelect }: PlanCardProps) {
       <div
         className={cn(
           "w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors",
-          selected ? "ember-gradient" : "bg-secondary"
+          selected ? "ember-gradient" : "bg-secondary",
         )}
       >
         {isWeekly ? (
@@ -94,7 +94,7 @@ function PlanCard({ plan, selected, onSelect }: PlanCardProps) {
         <div
           className={cn(
             "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
-            selected ? "border-primary bg-primary" : "border-border"
+            selected ? "border-primary bg-primary" : "border-border",
           )}
         >
           {selected && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -102,7 +102,7 @@ function PlanCard({ plan, selected, onSelect }: PlanCardProps) {
         <span
           className={cn(
             "font-body text-sm font-medium",
-            selected ? "text-primary" : "text-muted-foreground"
+            selected ? "text-primary" : "text-muted-foreground",
           )}
         >
           {selected ? "Selected" : "Select this plan"}
@@ -139,7 +139,7 @@ function BowlSizeSelector({ plan, selected, onSelect }: BowlSizeSelectorProps) {
               "text-left rounded-xl border-2 p-4 transition-all duration-200",
               isSelected
                 ? "border-primary bg-primary/5 shadow-sm"
-                : "border-border bg-card hover:border-primary/30 hover:shadow-sm"
+                : "border-border bg-card hover:border-primary/30 hover:shadow-sm",
             )}
           >
             <div className="font-display text-xl font-bold text-foreground mb-0.5">
@@ -151,7 +151,7 @@ function BowlSizeSelector({ plan, selected, onSelect }: BowlSizeSelectorProps) {
             <div
               className={cn(
                 "font-display text-lg font-bold",
-                isSelected ? "text-primary" : "text-foreground"
+                isSelected ? "text-primary" : "text-foreground",
               )}
             >
               ₹{price}
@@ -167,10 +167,10 @@ function BowlSizeSelector({ plan, selected, onSelect }: BowlSizeSelectorProps) {
 
 export default function SubscribePage() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>(
-    SubscriptionPlan.weekly
+    SubscriptionPlan.weekly,
   );
   const [selectedBowlSize, setSelectedBowlSize] = useState<BowlSize>(
-    BowlSize.medium
+    BowlSize.medium,
   );
   const [form, setForm] = useState({ name: "", phone: "" });
   const [subscribed, setSubscribed] = useState(false);
@@ -403,7 +403,10 @@ export default function SubscribePage() {
                     <p className="font-display text-2xl font-bold text-primary mt-2">
                       ₹{price}
                       <span className="font-body text-sm text-muted-foreground font-normal ml-1">
-                        /{selectedPlan === SubscriptionPlan.weekly ? "week" : "month"}
+                        /
+                        {selectedPlan === SubscriptionPlan.weekly
+                          ? "week"
+                          : "month"}
                       </span>
                     </p>
                   </div>

@@ -40,6 +40,15 @@ export const SubscriptionPlan = IDL.Variant({
   'monthly' : IDL.Null,
   'weekly' : IDL.Null,
 });
+export const Plan = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'isActive' : IDL.Bool,
+  'price350gm' : IDL.Float64,
+  'price500gm' : IDL.Float64,
+  'planType' : SubscriptionPlan,
+  'price250gm' : IDL.Float64,
+});
 export const BowlSize = IDL.Variant({
   'large' : IDL.Null,
   'small' : IDL.Null,
@@ -127,6 +136,11 @@ export const idlService = IDL.Service({
       [MenuItem],
       [],
     ),
+  'createPlan' : IDL.Func(
+      [IDL.Text, SubscriptionPlan, IDL.Float64, IDL.Float64, IDL.Float64],
+      [Plan],
+      [],
+    ),
   'createSubscription' : IDL.Func(
       [IDL.Text, IDL.Text, SubscriptionPlan, BowlSize, IDL.Float64],
       [Subscription],
@@ -135,9 +149,11 @@ export const idlService = IDL.Service({
   'deleteCustomer' : IDL.Func([IDL.Nat], [], []),
   'deleteInventoryItem' : IDL.Func([IDL.Nat], [], []),
   'deleteMenuItem' : IDL.Func([IDL.Nat], [], []),
+  'deletePlan' : IDL.Func([IDL.Nat], [], []),
   'getActiveSubscriptionCount' : IDL.Func([], [IDL.Nat], ['query']),
   'getAllCustomers' : IDL.Func([], [IDL.Vec(Customer)], ['query']),
   'getAllOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
+  'getAllPlans' : IDL.Func([], [IDL.Vec(Plan)], ['query']),
   'getAllSubscriptions' : IDL.Func([], [IDL.Vec(Subscription)], ['query']),
   'getAvailableMenuItems' : IDL.Func([], [IDL.Vec(MenuItem)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -152,6 +168,19 @@ export const idlService = IDL.Service({
   'getLowStockItems' : IDL.Func([], [IDL.Vec(InventoryItem)], ['query']),
   'getOrder' : IDL.Func([IDL.Nat], [Order], ['query']),
   'getOrdersByStatus' : IDL.Func([OrderStatus], [IDL.Vec(Order)], ['query']),
+  'getPlanEnrollmentCounts' : IDL.Func(
+      [],
+      [
+        IDL.Vec(
+          IDL.Record({
+            'planId' : IDL.Nat,
+            'planName' : IDL.Text,
+            'enrolledCount' : IDL.Nat,
+          })
+        ),
+      ],
+      ['query'],
+    ),
   'getRevenueAndOrderCount' : IDL.Func(
       [Time, Time],
       [IDL.Record({ 'revenue' : IDL.Float64, 'orderCount' : IDL.Nat })],
@@ -191,6 +220,19 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateOrderStatus' : IDL.Func([IDL.Nat, OrderStatus], [Order], []),
+  'updatePlan' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Text,
+        SubscriptionPlan,
+        IDL.Float64,
+        IDL.Float64,
+        IDL.Float64,
+        IDL.Bool,
+      ],
+      [Plan],
+      [],
+    ),
   'updateStockLevel' : IDL.Func([IDL.Nat, IDL.Float64], [InventoryItem], []),
   'updateSubscription' : IDL.Func(
       [IDL.Nat, BowlSize, IDL.Float64, PaymentStatus],
@@ -238,6 +280,15 @@ export const idlFactory = ({ IDL }) => {
   const SubscriptionPlan = IDL.Variant({
     'monthly' : IDL.Null,
     'weekly' : IDL.Null,
+  });
+  const Plan = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'isActive' : IDL.Bool,
+    'price350gm' : IDL.Float64,
+    'price500gm' : IDL.Float64,
+    'planType' : SubscriptionPlan,
+    'price250gm' : IDL.Float64,
   });
   const BowlSize = IDL.Variant({
     'large' : IDL.Null,
@@ -323,6 +374,11 @@ export const idlFactory = ({ IDL }) => {
         [MenuItem],
         [],
       ),
+    'createPlan' : IDL.Func(
+        [IDL.Text, SubscriptionPlan, IDL.Float64, IDL.Float64, IDL.Float64],
+        [Plan],
+        [],
+      ),
     'createSubscription' : IDL.Func(
         [IDL.Text, IDL.Text, SubscriptionPlan, BowlSize, IDL.Float64],
         [Subscription],
@@ -331,9 +387,11 @@ export const idlFactory = ({ IDL }) => {
     'deleteCustomer' : IDL.Func([IDL.Nat], [], []),
     'deleteInventoryItem' : IDL.Func([IDL.Nat], [], []),
     'deleteMenuItem' : IDL.Func([IDL.Nat], [], []),
+    'deletePlan' : IDL.Func([IDL.Nat], [], []),
     'getActiveSubscriptionCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getAllCustomers' : IDL.Func([], [IDL.Vec(Customer)], ['query']),
     'getAllOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
+    'getAllPlans' : IDL.Func([], [IDL.Vec(Plan)], ['query']),
     'getAllSubscriptions' : IDL.Func([], [IDL.Vec(Subscription)], ['query']),
     'getAvailableMenuItems' : IDL.Func([], [IDL.Vec(MenuItem)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -352,6 +410,19 @@ export const idlFactory = ({ IDL }) => {
     'getLowStockItems' : IDL.Func([], [IDL.Vec(InventoryItem)], ['query']),
     'getOrder' : IDL.Func([IDL.Nat], [Order], ['query']),
     'getOrdersByStatus' : IDL.Func([OrderStatus], [IDL.Vec(Order)], ['query']),
+    'getPlanEnrollmentCounts' : IDL.Func(
+        [],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'planId' : IDL.Nat,
+              'planName' : IDL.Text,
+              'enrolledCount' : IDL.Nat,
+            })
+          ),
+        ],
+        ['query'],
+      ),
     'getRevenueAndOrderCount' : IDL.Func(
         [Time, Time],
         [IDL.Record({ 'revenue' : IDL.Float64, 'orderCount' : IDL.Nat })],
@@ -391,6 +462,19 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateOrderStatus' : IDL.Func([IDL.Nat, OrderStatus], [Order], []),
+    'updatePlan' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Text,
+          SubscriptionPlan,
+          IDL.Float64,
+          IDL.Float64,
+          IDL.Float64,
+          IDL.Bool,
+        ],
+        [Plan],
+        [],
+      ),
     'updateStockLevel' : IDL.Func([IDL.Nat, IDL.Float64], [InventoryItem], []),
     'updateSubscription' : IDL.Func(
         [IDL.Nat, BowlSize, IDL.Float64, PaymentStatus],

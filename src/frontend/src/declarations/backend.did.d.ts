@@ -65,6 +65,15 @@ export type OrderStatus = { 'new' : null } |
 export type PaymentStatus = { 'pending' : null } |
   { 'paid' : null } |
   { 'overdue' : null };
+export interface Plan {
+  'id' : bigint,
+  'name' : string,
+  'isActive' : boolean,
+  'price350gm' : number,
+  'price500gm' : number,
+  'planType' : SubscriptionPlan,
+  'price250gm' : number,
+}
 export interface Subscription {
   'id' : bigint,
   'customerName' : string,
@@ -107,6 +116,10 @@ export interface _SERVICE {
     [string, string, number, string, string],
     MenuItem
   >,
+  'createPlan' : ActorMethod<
+    [string, SubscriptionPlan, number, number, number],
+    Plan
+  >,
   'createSubscription' : ActorMethod<
     [string, string, SubscriptionPlan, BowlSize, number],
     Subscription
@@ -114,9 +127,11 @@ export interface _SERVICE {
   'deleteCustomer' : ActorMethod<[bigint], undefined>,
   'deleteInventoryItem' : ActorMethod<[bigint], undefined>,
   'deleteMenuItem' : ActorMethod<[bigint], undefined>,
+  'deletePlan' : ActorMethod<[bigint], undefined>,
   'getActiveSubscriptionCount' : ActorMethod<[], bigint>,
   'getAllCustomers' : ActorMethod<[], Array<Customer>>,
   'getAllOrders' : ActorMethod<[], Array<Order>>,
+  'getAllPlans' : ActorMethod<[], Array<Plan>>,
   'getAllSubscriptions' : ActorMethod<[], Array<Subscription>>,
   'getAvailableMenuItems' : ActorMethod<[], Array<MenuItem>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
@@ -127,6 +142,10 @@ export interface _SERVICE {
   'getLowStockItems' : ActorMethod<[], Array<InventoryItem>>,
   'getOrder' : ActorMethod<[bigint], Order>,
   'getOrdersByStatus' : ActorMethod<[OrderStatus], Array<Order>>,
+  'getPlanEnrollmentCounts' : ActorMethod<
+    [],
+    Array<{ 'planId' : bigint, 'planName' : string, 'enrolledCount' : bigint }>
+  >,
   'getRevenueAndOrderCount' : ActorMethod<
     [Time, Time],
     { 'revenue' : number, 'orderCount' : bigint }
@@ -150,6 +169,10 @@ export interface _SERVICE {
     MenuItem
   >,
   'updateOrderStatus' : ActorMethod<[bigint, OrderStatus], Order>,
+  'updatePlan' : ActorMethod<
+    [bigint, string, SubscriptionPlan, number, number, number, boolean],
+    Plan
+  >,
   'updateStockLevel' : ActorMethod<[bigint, number], InventoryItem>,
   'updateSubscription' : ActorMethod<
     [bigint, BowlSize, number, PaymentStatus],

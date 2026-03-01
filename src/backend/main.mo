@@ -11,9 +11,9 @@ import Int "mo:core/Int";
 import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
-import Migration "migration";
 
-(with migration = Migration.run)
+
+
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -100,18 +100,30 @@ actor {
     address : Text;
   };
 
+  type Plan = {
+    id : Nat;
+    name : Text;
+    planType : SubscriptionPlan;
+    price250gm : Float;
+    price350gm : Float;
+    price500gm : Float;
+    isActive : Bool;
+  };
+
   let userProfiles = Map.empty<Principal, UserProfile>();
   let menuItems = Map.empty<Nat, MenuItem>();
   let orders = Map.empty<Nat, Order>();
   let inventory = Map.empty<Nat, InventoryItem>();
   let subscriptions = Map.empty<Nat, Subscription>();
   let customers = Map.empty<Nat, Customer>();
+  let plans = Map.empty<Nat, Plan>();
 
   var nextMenuItemId = 1;
   var nextOrderId = 1;
   var nextInventoryItemId = 1;
   var nextSubscriptionId = 1;
   var nextCustomerId = 1;
+  var nextPlanId = 1;
 
   // -------------------------------
   // User Profile Management
@@ -821,5 +833,107 @@ actor {
       case (null) { Runtime.trap("Customer not found") };
       case (?customer) { customer };
     };
+  };
+
+  // -------------------------------
+  // Plan Management (NEW)
+  // -------------------------------
+
+  public shared ({ caller }) func createPlan(
+    name : Text,
+    planType : SubscriptionPlan,
+    price250gm : Float,
+    price350gm : Float,
+    price500gm : Float,
+  ) : async Plan {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can create plans");
+    };
+
+    let plan : Plan = {
+      id = nextPlanId;
+      name;
+      planType;
+      price250gm;
+      price350gm;
+      price500gm;
+      isActive = true;
+    };
+
+    plans.add(nextPlanId, plan);
+    nextPlanId += 1;
+    plan;
+  };
+
+  public shared ({ caller }) func updatePlan(
+    id : Nat,
+    name : Text,
+    planType : SubscriptionPlan,
+    price250gm : Float,
+    price350gm : Float,
+    price500gm : Float,
+    isActive : Bool,
+  ) : async Plan {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update plans");
+    };
+
+    switch (plans.get(id)) {
+      case (null) { Runtime.trap("Plan not found") };
+      case (?_) {
+        let updated : Plan = {
+          id;
+          name;
+          planType;
+          price250gm;
+          price350gm;
+          price500gm;
+          isActive;
+        };
+        plans.add(id, updated);
+        updated;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deletePlan(id : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete plans");
+    };
+
+    if (not plans.containsKey(id)) {
+      Runtime.trap("Plan not found");
+    };
+    plans.remove(id);
+  };
+
+  public query ({ caller }) func getAllPlans() : async [Plan] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view plans");
+    };
+
+    plans.values().toArray();
+  };
+
+  public query ({ caller }) func getPlanEnrollmentCounts() : async [{ planId : Nat; planName : Text; enrolledCount : Nat }] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view counts");
+    };
+
+    plans.values().toArray().map(
+      func(plan) {
+        let activeCount = subscriptions.values().toArray().filter(
+          func(sub) {
+            sub.plan == plan.planType and sub.status == #active
+          }
+        ).size();
+
+        {
+          planId = plan.id;
+          planName = plan.name;
+          enrolledCount = activeCount;
+        };
+      }
+    );
   };
 };

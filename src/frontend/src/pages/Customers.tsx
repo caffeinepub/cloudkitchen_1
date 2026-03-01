@@ -1,26 +1,3 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,26 +9,49 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Users,
-  Plus,
-  Pencil,
-  Trash2,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import {
   Loader2,
-  Phone,
   MapPin,
-  Star,
+  Pencil,
+  Phone,
+  Plus,
   Search,
+  Star,
+  Trash2,
+  Users,
 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { Customer } from "../backend.d";
 import {
   useAllCustomers,
   useCreateCustomer,
-  useUpdateCustomer,
   useDeleteCustomer,
+  useUpdateCustomer,
 } from "../hooks/useQueries";
-import { Customer } from "../backend.d";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 // ─── Customer Form ─────────────────────────────────────────────────────────────
 
@@ -75,7 +75,11 @@ interface CustomerDialogProps {
   editingCustomer?: Customer | null;
 }
 
-function CustomerDialog({ open, onOpenChange, editingCustomer }: CustomerDialogProps) {
+function CustomerDialog({
+  open,
+  onOpenChange,
+  editingCustomer,
+}: CustomerDialogProps) {
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
 
@@ -87,7 +91,7 @@ function CustomerDialog({ open, onOpenChange, editingCustomer }: CustomerDialogP
           preferences: editingCustomer.preferences,
           address: editingCustomer.address,
         }
-      : { ...DEFAULT_FORM }
+      : { ...DEFAULT_FORM },
   );
 
   const isEditing = !!editingCustomer;
@@ -135,7 +139,9 @@ function CustomerDialog({ open, onOpenChange, editingCustomer }: CustomerDialogP
       }
       handleOpenChange(false);
     } catch {
-      toast.error(isEditing ? "Failed to update customer" : "Failed to add customer");
+      toast.error(
+        isEditing ? "Failed to update customer" : "Failed to add customer",
+      );
     }
   }
 
@@ -156,7 +162,10 @@ function CustomerDialog({ open, onOpenChange, editingCustomer }: CustomerDialogP
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {/* Name */}
           <div className="space-y-1.5">
-            <Label htmlFor="cust-name" className="font-body text-sm font-medium">
+            <Label
+              htmlFor="cust-name"
+              className="font-body text-sm font-medium"
+            >
               Full Name <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -173,7 +182,10 @@ function CustomerDialog({ open, onOpenChange, editingCustomer }: CustomerDialogP
 
           {/* Mobile No */}
           <div className="space-y-1.5">
-            <Label htmlFor="cust-mobile" className="font-body text-sm font-medium">
+            <Label
+              htmlFor="cust-mobile"
+              className="font-body text-sm font-medium"
+            >
               Mobile Number <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -190,9 +202,14 @@ function CustomerDialog({ open, onOpenChange, editingCustomer }: CustomerDialogP
 
           {/* Preferences */}
           <div className="space-y-1.5">
-            <Label htmlFor="cust-prefs" className="font-body text-sm font-medium">
+            <Label
+              htmlFor="cust-prefs"
+              className="font-body text-sm font-medium"
+            >
               Preferences
-              <span className="text-muted-foreground ml-1 font-normal">(optional)</span>
+              <span className="text-muted-foreground ml-1 font-normal">
+                (optional)
+              </span>
             </Label>
             <Textarea
               id="cust-prefs"
@@ -206,9 +223,14 @@ function CustomerDialog({ open, onOpenChange, editingCustomer }: CustomerDialogP
 
           {/* Address */}
           <div className="space-y-1.5">
-            <Label htmlFor="cust-addr" className="font-body text-sm font-medium">
+            <Label
+              htmlFor="cust-addr"
+              className="font-body text-sm font-medium"
+            >
               Address
-              <span className="text-muted-foreground ml-1 font-normal">(optional)</span>
+              <span className="text-muted-foreground ml-1 font-normal">
+                (optional)
+              </span>
             </Label>
             <Textarea
               id="cust-addr"
@@ -392,7 +414,9 @@ export default function Customers() {
       <Card className="kitchen-card animate-slide-up delay-300">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <CardTitle className="font-display text-xl">All Customers</CardTitle>
+            <CardTitle className="font-display text-xl">
+              All Customers
+            </CardTitle>
             {/* Search */}
             <div className="sm:ml-auto relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />

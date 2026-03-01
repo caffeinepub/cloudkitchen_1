@@ -1,19 +1,23 @@
-import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ShoppingBag, TrendingUp, Trophy } from "lucide-react";
+import { useMemo, useState } from "react";
 import {
-  BarChart,
   Bar,
-  LineChart,
+  BarChart,
+  CartesianGrid,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
-import { useDailyBreakdown, useTopSellingItems, useRevenueAndOrderCount } from "../hooks/useQueries";
-import { TrendingUp, ShoppingBag, Trophy } from "lucide-react";
+import {
+  useDailyBreakdown,
+  useRevenueAndOrderCount,
+  useTopSellingItems,
+} from "../hooks/useQueries";
 
 const RANGE_OPTIONS = [
   { label: "7 days", days: 7 },
@@ -35,18 +39,27 @@ export default function Analytics() {
     };
   }, [rangeDays]);
 
-  const { data: summary, isLoading: summaryLoading } = useRevenueAndOrderCount(startTime, endTime);
-  const { data: dailyData, isLoading: dailyLoading } = useDailyBreakdown(startTime, endTime);
+  const { data: summary, isLoading: summaryLoading } = useRevenueAndOrderCount(
+    startTime,
+    endTime,
+  );
+  const { data: dailyData, isLoading: dailyLoading } = useDailyBreakdown(
+    startTime,
+    endTime,
+  );
   const { data: topItems, isLoading: topLoading } = useTopSellingItems(10n);
 
   const chartData = useMemo(() => {
     if (!dailyData) return [];
     return dailyData
       .map((d) => ({
-        date: new Date(Number(d.date / 1_000_000n)).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
+        date: new Date(Number(d.date / 1_000_000n)).toLocaleDateString(
+          "en-US",
+          {
+            month: "short",
+            day: "numeric",
+          },
+        ),
         revenue: d.revenue,
         orders: Number(d.orderCount),
       }))
@@ -54,13 +67,19 @@ export default function Analytics() {
   }, [dailyData]);
 
   const formatCurrency = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(n);
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Analytics</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">
+            Analytics
+          </h1>
           <p className="text-muted-foreground font-body text-sm mt-1">
             Performance overview
           </p>
@@ -150,22 +169,39 @@ export default function Analytics() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--border))" />
+              <BarChart
+                data={chartData}
+                margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="oklch(var(--border))"
+                />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 11, fontFamily: "IBM Plex Sans", fill: "oklch(var(--muted-foreground))" }}
+                  tick={{
+                    fontSize: 11,
+                    fontFamily: "IBM Plex Sans",
+                    fill: "oklch(var(--muted-foreground))",
+                  }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fontFamily: "IBM Plex Sans", fill: "oklch(var(--muted-foreground))" }}
+                  tick={{
+                    fontSize: 11,
+                    fontFamily: "IBM Plex Sans",
+                    fill: "oklch(var(--muted-foreground))",
+                  }}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(v) => `$${v}`}
                 />
                 <Tooltip
-                  formatter={(value: number) => [formatCurrency(value), "Revenue"]}
+                  formatter={(value: number) => [
+                    formatCurrency(value),
+                    "Revenue",
+                  ]}
                   contentStyle={{
                     background: "oklch(var(--popover))",
                     border: "1px solid oklch(var(--border))",
@@ -174,7 +210,11 @@ export default function Analytics() {
                     fontFamily: "IBM Plex Sans",
                   }}
                 />
-                <Bar dataKey="revenue" fill="oklch(0.72 0.19 48)" radius={[3, 3, 0, 0]} />
+                <Bar
+                  dataKey="revenue"
+                  fill="oklch(0.72 0.19 48)"
+                  radius={[3, 3, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -184,7 +224,9 @@ export default function Analytics() {
       {/* Order count chart */}
       <Card className="kitchen-card animate-slide-up delay-300">
         <CardHeader className="pb-2">
-          <CardTitle className="font-display text-xl">Daily Order Count</CardTitle>
+          <CardTitle className="font-display text-xl">
+            Daily Order Count
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {dailyLoading ? (
@@ -195,16 +237,30 @@ export default function Analytics() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--border))" />
+              <LineChart
+                data={chartData}
+                margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="oklch(var(--border))"
+                />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 11, fontFamily: "IBM Plex Sans", fill: "oklch(var(--muted-foreground))" }}
+                  tick={{
+                    fontSize: 11,
+                    fontFamily: "IBM Plex Sans",
+                    fill: "oklch(var(--muted-foreground))",
+                  }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fontFamily: "IBM Plex Sans", fill: "oklch(var(--muted-foreground))" }}
+                  tick={{
+                    fontSize: 11,
+                    fontFamily: "IBM Plex Sans",
+                    fill: "oklch(var(--muted-foreground))",
+                  }}
                   tickLine={false}
                   axisLine={false}
                 />
@@ -235,13 +291,15 @@ export default function Analytics() {
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-primary" />
-            <CardTitle className="font-display text-xl">Top Selling Items</CardTitle>
+            <CardTitle className="font-display text-xl">
+              Top Selling Items
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           {topLoading ? (
             <div className="space-y-3">
-              {(["t1","t2","t3","t4","t5"]).map((k) => (
+              {["t1", "t2", "t3", "t4", "t5"].map((k) => (
                 <Skeleton key={k} className="h-10 w-full" />
               ))}
             </div>
@@ -255,7 +313,10 @@ export default function Analytics() {
                 const maxQty = Number(topItems[0]?.totalQuantity ?? 1n);
                 const pct = (Number(item.totalQuantity) / maxQty) * 100;
                 return (
-                  <div key={String(item.menuItemId)} className="flex items-center gap-3">
+                  <div
+                    key={String(item.menuItemId)}
+                    className="flex items-center gap-3"
+                  >
                     <span className="font-display text-sm font-bold text-muted-foreground w-5 text-right shrink-0">
                       {index + 1}
                     </span>

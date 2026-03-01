@@ -1,18 +1,3 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +9,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -39,37 +29,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import {
-  Users,
-  PauseCircle,
-  PlayCircle,
-  XCircle,
-  CalendarDays,
-  Loader2,
   AlertTriangle,
-  Pencil,
-  ClockAlert,
   Ban,
+  CalendarDays,
+  ClockAlert,
+  Loader2,
+  PauseCircle,
+  Pencil,
+  PlayCircle,
   Plus,
+  Users,
+  XCircle,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
-  useAllSubscriptions,
-  useUpdateSubscriptionStatus,
-  useCheckAndExpireSubscriptions,
-  useExpiringSubscriptions,
-  useUpdateSubscription,
-  useCreateSubscription,
-} from "../hooks/useQueries";
-import {
-  SubscriptionPlan,
-  SubscriptionStatus,
   BowlSize,
   PaymentStatus,
-  Subscription,
+  type Subscription,
+  SubscriptionPlan,
+  SubscriptionStatus,
 } from "../backend.d";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import {
+  useAllSubscriptions,
+  useCheckAndExpireSubscriptions,
+  useCreateSubscription,
+  useExpiringSubscriptions,
+  useUpdateSubscription,
+  useUpdateSubscriptionStatus,
+} from "../hooks/useQueries";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -117,8 +117,7 @@ function StatusBadge({ status }: { status: SubscriptionStatus }) {
     },
     [SubscriptionStatus.expired]: {
       label: "Expired",
-      className:
-        "bg-muted text-muted-foreground border-border",
+      className: "bg-muted text-muted-foreground border-border",
     },
   };
   const c = config[status] ?? config[SubscriptionStatus.cancelled];
@@ -126,7 +125,7 @@ function StatusBadge({ status }: { status: SubscriptionStatus }) {
     <span
       className={cn(
         "inline-flex items-center px-2 py-0.5 rounded text-xs font-body font-semibold border",
-        c.className
+        c.className,
       )}
     >
       {c.label}
@@ -142,24 +141,26 @@ function PlanBadge({ plan }: { plan: SubscriptionPlan }) {
         "font-body text-xs",
         plan === SubscriptionPlan.weekly
           ? "border-primary/40 text-primary bg-primary/5"
-          : "border-muted-foreground/40 text-muted-foreground bg-secondary"
+          : "border-muted-foreground/40 text-muted-foreground bg-secondary",
       )}
     >
-      {plan === SubscriptionPlan.weekly ? "Weekly · 6 bowls" : "Monthly · 24 bowls"}
+      {plan === SubscriptionPlan.weekly
+        ? "Weekly · 6 bowls"
+        : "Monthly · 24 bowls"}
     </Badge>
   );
 }
 
 function BowlSizeBadge({ size }: { size: BowlSize }) {
   const labels: Record<BowlSize, string> = {
-    [BowlSize.small]: "S",
-    [BowlSize.medium]: "M",
-    [BowlSize.large]: "L",
+    [BowlSize.small]: "250gm",
+    [BowlSize.medium]: "350gm",
+    [BowlSize.large]: "500gm",
   };
   const fullLabels: Record<BowlSize, string> = {
-    [BowlSize.small]: "Small",
-    [BowlSize.medium]: "Medium",
-    [BowlSize.large]: "Large",
+    [BowlSize.small]: "250gm",
+    [BowlSize.medium]: "350gm",
+    [BowlSize.large]: "500gm",
   };
   return (
     <Badge
@@ -195,7 +196,7 @@ function PaymentBadge({ status }: { status: PaymentStatus }) {
     <span
       className={cn(
         "inline-flex items-center px-2 py-0.5 rounded text-xs font-body font-semibold border",
-        c.className
+        c.className,
       )}
     >
       {c.label}
@@ -219,7 +220,10 @@ const DEFAULT_ADD_FORM = {
   paymentStatus: PaymentStatus.pending as PaymentStatus,
 };
 
-function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProps) {
+function AddSubscriptionDialog({
+  open,
+  onOpenChange,
+}: AddSubscriptionDialogProps) {
   const createSub = useCreateSubscription();
   const updateSub = useUpdateSubscription();
   const [form, setForm] = useState({ ...DEFAULT_ADD_FORM });
@@ -236,8 +240,8 @@ function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProp
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsedPrice = parseFloat(form.price);
-    if (isNaN(parsedPrice) || parsedPrice < 0) {
+    const parsedPrice = Number.parseFloat(form.price);
+    if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
       toast.error("Please enter a valid price");
       return;
     }
@@ -294,7 +298,10 @@ function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProp
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {/* Customer Name */}
           <div className="space-y-1.5">
-            <Label htmlFor="add-cust-name" className="font-body text-sm font-medium">
+            <Label
+              htmlFor="add-cust-name"
+              className="font-body text-sm font-medium"
+            >
               Customer Name <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -302,7 +309,9 @@ function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProp
               type="text"
               required
               value={form.customerName}
-              onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, customerName: e.target.value }))
+              }
               className="font-body"
               placeholder="e.g. Priya Sharma"
             />
@@ -310,7 +319,10 @@ function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProp
 
           {/* Phone Number */}
           <div className="space-y-1.5">
-            <Label htmlFor="add-cust-phone" className="font-body text-sm font-medium">
+            <Label
+              htmlFor="add-cust-phone"
+              className="font-body text-sm font-medium"
+            >
               Phone Number <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -318,7 +330,9 @@ function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProp
               type="tel"
               required
               value={form.customerPhone}
-              onChange={(e) => setForm((p) => ({ ...p, customerPhone: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, customerPhone: e.target.value }))
+              }
               className="font-body"
               placeholder="e.g. +91 98765 43210"
             />
@@ -329,16 +343,24 @@ function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProp
             <Label className="font-body text-sm font-medium">Plan</Label>
             <Select
               value={form.plan}
-              onValueChange={(v) => setForm((p) => ({ ...p, plan: v as SubscriptionPlan }))}
+              onValueChange={(v) =>
+                setForm((p) => ({ ...p, plan: v as SubscriptionPlan }))
+              }
             >
               <SelectTrigger className="font-body">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={SubscriptionPlan.weekly} className="font-body">
+                <SelectItem
+                  value={SubscriptionPlan.weekly}
+                  className="font-body"
+                >
                   Weekly — 6 bowls / week
                 </SelectItem>
-                <SelectItem value={SubscriptionPlan.monthly} className="font-body">
+                <SelectItem
+                  value={SubscriptionPlan.monthly}
+                  className="font-body"
+                >
                   Monthly — 24 bowls / month
                 </SelectItem>
               </SelectContent>
@@ -350,22 +372,33 @@ function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProp
             <Label className="font-body text-sm font-medium">Bowl Size</Label>
             <Select
               value={form.bowlSize}
-              onValueChange={(v) => setForm((p) => ({ ...p, bowlSize: v as BowlSize }))}
+              onValueChange={(v) =>
+                setForm((p) => ({ ...p, bowlSize: v as BowlSize }))
+              }
             >
               <SelectTrigger className="font-body">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={BowlSize.small} className="font-body">Small</SelectItem>
-                <SelectItem value={BowlSize.medium} className="font-body">Medium</SelectItem>
-                <SelectItem value={BowlSize.large} className="font-body">Large</SelectItem>
+                <SelectItem value={BowlSize.small} className="font-body">
+                  250gm
+                </SelectItem>
+                <SelectItem value={BowlSize.medium} className="font-body">
+                  350gm
+                </SelectItem>
+                <SelectItem value={BowlSize.large} className="font-body">
+                  500gm
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Price */}
           <div className="space-y-1.5">
-            <Label htmlFor="add-price" className="font-body text-sm font-medium">
+            <Label
+              htmlFor="add-price"
+              className="font-body text-sm font-medium"
+            >
               Price (₹) <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -375,7 +408,9 @@ function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProp
               min="0"
               step="0.01"
               value={form.price}
-              onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, price: e.target.value }))
+              }
               className="font-body"
               placeholder="e.g. 700"
             />
@@ -383,18 +418,28 @@ function AddSubscriptionDialog({ open, onOpenChange }: AddSubscriptionDialogProp
 
           {/* Payment Status */}
           <div className="space-y-1.5">
-            <Label className="font-body text-sm font-medium">Payment Status</Label>
+            <Label className="font-body text-sm font-medium">
+              Payment Status
+            </Label>
             <Select
               value={form.paymentStatus}
-              onValueChange={(v) => setForm((p) => ({ ...p, paymentStatus: v as PaymentStatus }))}
+              onValueChange={(v) =>
+                setForm((p) => ({ ...p, paymentStatus: v as PaymentStatus }))
+              }
             >
               <SelectTrigger className="font-body">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={PaymentStatus.pending} className="font-body">Pending</SelectItem>
-                <SelectItem value={PaymentStatus.paid} className="font-body">Paid</SelectItem>
-                <SelectItem value={PaymentStatus.overdue} className="font-body">Overdue</SelectItem>
+                <SelectItem value={PaymentStatus.pending} className="font-body">
+                  Pending
+                </SelectItem>
+                <SelectItem value={PaymentStatus.paid} className="font-body">
+                  Paid
+                </SelectItem>
+                <SelectItem value={PaymentStatus.overdue} className="font-body">
+                  Overdue
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -443,7 +488,7 @@ function EditDialog({ sub, open, onOpenChange }: EditDialogProps) {
   const [bowlSize, setBowlSize] = useState<BowlSize>(sub.bowlSize);
   const [price, setPrice] = useState(String(sub.price));
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
-    sub.paymentStatus
+    sub.paymentStatus,
   );
 
   // Reset when sub changes
@@ -454,8 +499,8 @@ function EditDialog({ sub, open, onOpenChange }: EditDialogProps) {
   }, [sub]);
 
   async function handleSave() {
-    const parsedPrice = parseFloat(price);
-    if (isNaN(parsedPrice) || parsedPrice < 0) {
+    const parsedPrice = Number.parseFloat(price);
+    if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
       toast.error("Please enter a valid price");
       return;
     }
@@ -498,22 +543,20 @@ function EditDialog({ sub, open, onOpenChange }: EditDialogProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={BowlSize.small} className="font-body">
-                  Small
+                  250gm
                 </SelectItem>
                 <SelectItem value={BowlSize.medium} className="font-body">
-                  Medium
+                  350gm
                 </SelectItem>
                 <SelectItem value={BowlSize.large} className="font-body">
-                  Large
+                  500gm
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="font-body text-sm font-medium">
-              Price (₹)
-            </Label>
+            <Label className="font-body text-sm font-medium">Price (₹)</Label>
             <Input
               type="number"
               min="0"
@@ -606,21 +649,22 @@ export default function Subscriptions() {
   const paused =
     subscriptions?.filter((s) => s.status === SubscriptionStatus.paused) ?? [];
   const cancelled =
-    subscriptions?.filter(
-      (s) => s.status === SubscriptionStatus.cancelled
-    ) ?? [];
+    subscriptions?.filter((s) => s.status === SubscriptionStatus.cancelled) ??
+    [];
   const expired =
     subscriptions?.filter((s) => s.status === SubscriptionStatus.expired) ?? [];
 
-  const filteredSubs = subscriptions?.filter((s) => {
-    if (filterTab === "all") return true;
-    if (filterTab === "active") return s.status === SubscriptionStatus.active;
-    if (filterTab === "paused") return s.status === SubscriptionStatus.paused;
-    if (filterTab === "expired") return s.status === SubscriptionStatus.expired;
-    if (filterTab === "cancelled")
-      return s.status === SubscriptionStatus.cancelled;
-    return true;
-  }) ?? [];
+  const filteredSubs =
+    subscriptions?.filter((s) => {
+      if (filterTab === "all") return true;
+      if (filterTab === "active") return s.status === SubscriptionStatus.active;
+      if (filterTab === "paused") return s.status === SubscriptionStatus.paused;
+      if (filterTab === "expired")
+        return s.status === SubscriptionStatus.expired;
+      if (filterTab === "cancelled")
+        return s.status === SubscriptionStatus.cancelled;
+      return true;
+    }) ?? [];
 
   async function handleStatus(id: bigint, status: SubscriptionStatus) {
     setPendingId(id);
@@ -630,8 +674,8 @@ export default function Subscriptions() {
         status === SubscriptionStatus.active
           ? "Subscription resumed"
           : status === SubscriptionStatus.paused
-          ? "Subscription paused"
-          : "Subscription cancelled"
+            ? "Subscription paused"
+            : "Subscription cancelled",
       );
     } catch {
       toast.error("Failed to update subscription status");
@@ -793,7 +837,10 @@ export default function Subscriptions() {
                 onValueChange={(v) => setFilterTab(v as FilterTab)}
               >
                 <TabsList className="h-8">
-                  <TabsTrigger value="all" className="font-body text-xs h-6 px-3">
+                  <TabsTrigger
+                    value="all"
+                    className="font-body text-xs h-6 px-3"
+                  >
                     All
                   </TabsTrigger>
                   <TabsTrigger
@@ -843,7 +890,7 @@ export default function Subscriptions() {
               </h3>
               <p className="font-body text-sm text-muted-foreground mt-1">
                 {filterTab === "all"
-                  ? "Click \"Add Subscription\" above to add your first subscriber"
+                  ? 'Click "Add Subscription" above to add your first subscriber'
                   : "Try selecting a different filter"}
               </p>
             </div>
@@ -895,7 +942,7 @@ export default function Subscriptions() {
                         key={String(sub.id)}
                         className={cn(
                           "hover:bg-accent/20 transition-colors",
-                          isMuted && "opacity-50"
+                          isMuted && "opacity-50",
                         )}
                       >
                         {/* Customer */}
@@ -926,8 +973,8 @@ export default function Subscriptions() {
                               isExpired
                                 ? "text-muted-foreground line-through"
                                 : expiringSoon
-                                ? "text-[oklch(0.58_0.18_55)] font-semibold"
-                                : "text-muted-foreground"
+                                  ? "text-[oklch(0.58_0.18_55)] font-semibold"
+                                  : "text-muted-foreground",
                             )}
                           >
                             {formatDate(sub.endDate)}
@@ -987,7 +1034,7 @@ export default function Subscriptions() {
                                 onClick={() =>
                                   handleStatus(
                                     sub.id,
-                                    SubscriptionStatus.paused
+                                    SubscriptionStatus.paused,
                                   )
                                 }
                               >
@@ -1008,7 +1055,7 @@ export default function Subscriptions() {
                                 onClick={() =>
                                   handleStatus(
                                     sub.id,
-                                    SubscriptionStatus.active
+                                    SubscriptionStatus.active,
                                   )
                                 }
                               >
@@ -1060,7 +1107,7 @@ export default function Subscriptions() {
                                       onClick={() =>
                                         handleStatus(
                                           sub.id,
-                                          SubscriptionStatus.cancelled
+                                          SubscriptionStatus.cancelled,
                                         )
                                       }
                                     >

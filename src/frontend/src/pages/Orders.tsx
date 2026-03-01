@@ -1,20 +1,40 @@
-import { useMemo } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ChevronRight, Phone, StickyNote } from "lucide-react";
-import { useAllOrders, useUpdateOrderStatus } from "../hooks/useQueries";
-import { OrderStatus, Order } from "../backend.d";
-import { StatusBadge } from "../components/StatusBadge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronRight, Loader2, Phone, StickyNote } from "lucide-react";
+import { useMemo } from "react";
 import { toast } from "sonner";
+import { type Order, OrderStatus } from "../backend.d";
+import { StatusBadge } from "../components/StatusBadge";
+import { useAllOrders, useUpdateOrderStatus } from "../hooks/useQueries";
 
 const COLUMNS: { status: OrderStatus; label: string; color: string }[] = [
-  { status: OrderStatus.new_, label: "New", color: "border-t-[3px] border-t-[oklch(0.82_0.19_85)]" },
-  { status: OrderStatus.preparing, label: "Preparing", color: "border-t-[3px] border-t-[oklch(0.62_0.18_240)]" },
-  { status: OrderStatus.ready, label: "Ready", color: "border-t-[3px] border-t-[oklch(0.68_0.18_155)]" },
-  { status: OrderStatus.delivered, label: "Delivered", color: "border-t-[3px] border-t-muted-foreground" },
-  { status: OrderStatus.cancelled, label: "Cancelled", color: "border-t-[3px] border-t-destructive" },
+  {
+    status: OrderStatus.new_,
+    label: "New",
+    color: "border-t-[3px] border-t-[oklch(0.82_0.19_85)]",
+  },
+  {
+    status: OrderStatus.preparing,
+    label: "Preparing",
+    color: "border-t-[3px] border-t-[oklch(0.62_0.18_240)]",
+  },
+  {
+    status: OrderStatus.ready,
+    label: "Ready",
+    color: "border-t-[3px] border-t-[oklch(0.68_0.18_155)]",
+  },
+  {
+    status: OrderStatus.delivered,
+    label: "Delivered",
+    color: "border-t-[3px] border-t-muted-foreground",
+  },
+  {
+    status: OrderStatus.cancelled,
+    label: "Cancelled",
+    color: "border-t-[3px] border-t-destructive",
+  },
 ];
 
 const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -34,11 +54,17 @@ function OrderCard({ order }: { order: Order }) {
 
   const formatTime = (ns: bigint) => {
     const ms = Number(ns / 1_000_000n);
-    return new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(ms).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const formatCurrency = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(n);
 
   const nextStatus = NEXT_STATUS[order.status];
   const nextLabel = NEXT_LABEL[order.status];
@@ -47,7 +73,9 @@ function OrderCard({ order }: { order: Order }) {
     if (!nextStatus) return;
     try {
       await updateStatus.mutateAsync({ orderId: order.id, status: nextStatus });
-      toast.success(`Order #${String(order.id).padStart(4, "0")} ${nextLabel?.toLowerCase()}`);
+      toast.success(
+        `Order #${String(order.id).padStart(4, "0")} ${nextLabel?.toLowerCase()}`,
+      );
     } catch {
       toast.error("Failed to update order status");
     }
@@ -55,7 +83,10 @@ function OrderCard({ order }: { order: Order }) {
 
   async function handleCancel() {
     try {
-      await updateStatus.mutateAsync({ orderId: order.id, status: OrderStatus.cancelled });
+      await updateStatus.mutateAsync({
+        orderId: order.id,
+        status: OrderStatus.cancelled,
+      });
       toast.success("Order cancelled");
     } catch {
       toast.error("Failed to cancel order");
@@ -87,10 +118,17 @@ function OrderCard({ order }: { order: Order }) {
 
         <div className="space-y-1 mb-3">
           {order.items.map((item) => (
-            <div key={String(item.menuItemId)} className="flex items-center justify-between text-xs">
+            <div
+              key={String(item.menuItemId)}
+              className="flex items-center justify-between text-xs"
+            >
               <span className="font-body">
-                <span className="font-medium text-foreground">{Number(item.quantity)}×</span>{" "}
-                <span className="text-muted-foreground">Item #{String(item.menuItemId)}</span>
+                <span className="font-medium text-foreground">
+                  {Number(item.quantity)}×
+                </span>{" "}
+                <span className="text-muted-foreground">
+                  Item #{String(item.menuItemId)}
+                </span>
               </span>
               <span className="text-muted-foreground">
                 ${(item.unitPrice * Number(item.quantity)).toFixed(2)}
@@ -102,7 +140,9 @@ function OrderCard({ order }: { order: Order }) {
         {order.notes && (
           <div className="flex items-start gap-1.5 bg-accent/50 rounded p-2 mb-3 text-xs">
             <StickyNote className="w-3 h-3 mt-0.5 shrink-0 text-muted-foreground" />
-            <span className="font-body text-muted-foreground">{order.notes}</span>
+            <span className="font-body text-muted-foreground">
+              {order.notes}
+            </span>
           </div>
         )}
 
@@ -124,7 +164,8 @@ function OrderCard({ order }: { order: Order }) {
               )}
             </Button>
           )}
-          {(order.status === OrderStatus.new_ || order.status === OrderStatus.preparing) && (
+          {(order.status === OrderStatus.new_ ||
+            order.status === OrderStatus.preparing) && (
             <Button
               size="sm"
               variant="outline"
@@ -152,20 +193,22 @@ export default function Orders() {
       [OrderStatus.delivered]: [],
       [OrderStatus.cancelled]: [],
     };
-    orders?.forEach((o) => {
+    for (const o of orders ?? []) {
       groups[o.status].push(o);
-    });
+    }
     // Sort by createdAt ascending within each column
-    Object.values(groups).forEach((arr) => {
+    for (const arr of Object.values(groups)) {
       arr.sort((a, b) => Number(a.createdAt - b.createdAt));
-    });
+    }
     return groups;
   }, [orders]);
 
   return (
     <div className="p-6 space-y-4 animate-fade-in h-full flex flex-col">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Orders</h1>
+        <h1 className="font-display text-3xl font-bold text-foreground">
+          Orders
+        </h1>
         <p className="text-muted-foreground font-body text-sm mt-1">
           {orders?.length ?? 0} total orders
         </p>
@@ -174,10 +217,10 @@ export default function Orders() {
       {isLoading ? (
         <div className="flex gap-4 overflow-x-auto pb-4">
           {COLUMNS.map((col) => (
-            <div key={col.status}               className="shrink-0 w-60">
+            <div key={col.status} className="shrink-0 w-60">
               <Skeleton className="h-8 w-full mb-3" />
               <div className="space-y-2">
-                {(["c1","c2","c3"]).map((k) => (
+                {["c1", "c2", "c3"].map((k) => (
                   <Skeleton key={k} className="h-32 w-full" />
                 ))}
               </div>
@@ -193,9 +236,7 @@ export default function Orders() {
                 key={col.status}
                 className="shrink-0 w-64 flex flex-col min-h-0"
               >
-                <div
-                  className={`rounded-md bg-card border mb-3 ${col.color}`}
-                >
+                <div className={`rounded-md bg-card border mb-3 ${col.color}`}>
                   <CardHeader className="py-2.5 px-3">
                     <div className="flex items-center justify-between">
                       <span className="font-display font-bold text-sm uppercase tracking-wider">
