@@ -7,6 +7,7 @@ import {
   ArrowRight,
   CalendarDays,
   Clock,
+  Receipt,
   ShoppingBag,
   TrendingUp,
 } from "lucide-react";
@@ -108,10 +109,23 @@ export default function Dashboard() {
     [orders],
   );
 
+  const { posSalesCount, posSalesRevenue } = useMemo(() => {
+    const posSales = (orders ?? []).filter(
+      (o) =>
+        o.notes.includes("POS Sale") &&
+        o.createdAt >= startOfDay &&
+        o.createdAt <= endOfDay,
+    );
+    return {
+      posSalesCount: posSales.length,
+      posSalesRevenue: posSales.reduce((sum, o) => sum + o.totalAmount, 0),
+    };
+  }, [orders, startOfDay, endOfDay]);
+
   const formatCurrency = (n: number) =>
-    new Intl.NumberFormat("en-US", {
+    new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
     }).format(n);
 
   const formatTime = (ns: bigint) => {
@@ -139,7 +153,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           title="Today's Revenue"
           value={statsLoading ? "—" : formatCurrency(todayStats?.revenue ?? 0)}
@@ -182,6 +196,14 @@ export default function Dashboard() {
           accentClass={
             (lowStock?.length ?? 0) > 0 ? "bg-destructive/10" : "bg-primary/10"
           }
+        />
+        <StatCard
+          title="POS Sales Today"
+          value={ordersLoading ? "—" : posSalesCount}
+          icon={Receipt}
+          sub={ordersLoading ? undefined : `₹${posSalesRevenue.toFixed(2)}`}
+          loading={ordersLoading}
+          accentClass="bg-primary/10"
         />
       </div>
 

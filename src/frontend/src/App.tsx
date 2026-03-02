@@ -16,6 +16,7 @@ import KitchenDisplay from "./pages/KitchenDisplay";
 import MenuManagement from "./pages/MenuManagement";
 import Orders from "./pages/Orders";
 import Plans from "./pages/Plans";
+import PointOfSale from "./pages/PointOfSale";
 import Subscriptions from "./pages/Subscriptions";
 
 // Admin layout — no authentication required, open access
@@ -105,6 +106,12 @@ const plansRoute = createRoute({
   component: Plans,
 });
 
+const posRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/pos",
+  component: PointOfSale,
+});
+
 const routeTree = rootRoute.addChildren([
   orderRoute,
   kitchenRoute,
@@ -112,6 +119,7 @@ const routeTree = rootRoute.addChildren([
     dashboardRoute,
     menuRoute,
     ordersRoute,
+    posRoute,
     inventoryRoute,
     analyticsRoute,
     subscriptionsRoute,

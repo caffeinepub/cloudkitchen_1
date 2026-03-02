@@ -194,7 +194,9 @@ export default function Orders() {
       [OrderStatus.cancelled]: [],
     };
     for (const o of orders ?? []) {
-      groups[o.status].push(o);
+      if (groups[o.status]) {
+        groups[o.status].push(o);
+      }
     }
     // Sort by createdAt ascending within each column
     for (const arr of Object.values(groups)) {

@@ -212,6 +212,8 @@ export interface backendInterface {
     deletePlan(id: bigint): Promise<void>;
     getActiveSubscriptionCount(): Promise<bigint>;
     getAllCustomers(): Promise<Array<Customer>>;
+    getAllInventoryItems(): Promise<Array<InventoryItem>>;
+    getAllMenuItems(): Promise<Array<MenuItem>>;
     getAllOrders(): Promise<Array<Order>>;
     getAllPlans(): Promise<Array<Plan>>;
     getAllSubscriptions(): Promise<Array<Subscription>>;
@@ -444,6 +446,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getAllCustomers();
+            return result;
+        }
+    }
+    async getAllInventoryItems(): Promise<Array<InventoryItem>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllInventoryItems();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllInventoryItems();
+            return result;
+        }
+    }
+    async getAllMenuItems(): Promise<Array<MenuItem>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllMenuItems();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllMenuItems();
             return result;
         }
     }

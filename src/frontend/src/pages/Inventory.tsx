@@ -41,14 +41,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { InventoryItem } from "../backend.d";
 import {
-  useAddToInventoryCache,
-  useInventoryAll,
-  useRemoveFromInventoryCache,
-  useUpdateInventoryCache,
-} from "../hooks/useInventoryAll";
-import {
   useCreateInventoryItem,
   useDeleteInventoryItem,
+  useInventoryItems,
   useUpdateInventoryItem,
   useUpdateStockLevel,
 } from "../hooks/useQueries";
@@ -68,10 +63,7 @@ const EMPTY_FORM: InventoryFormData = {
 };
 
 export default function Inventory() {
-  const { data: items } = useInventoryAll();
-  const addToCache = useAddToInventoryCache();
-  const updateInCache = useUpdateInventoryCache();
-  const removeFromCache = useRemoveFromInventoryCache();
+  const { data: items, isLoading } = useInventoryItems();
 
   const createItem = useCreateInventoryItem();
   const updateItem = useUpdateInventoryItem();
@@ -111,23 +103,21 @@ export default function Inventory() {
     }
     try {
       if (editingItem) {
-        const updated = await updateItem.mutateAsync({
+        await updateItem.mutateAsync({
           id: editingItem.id,
           name: form.name,
           unit: form.unit,
           quantity,
           lowStockThreshold,
         });
-        updateInCache(updated);
         toast.success("Item updated");
       } else {
-        const created = await createItem.mutateAsync({
+        await createItem.mutateAsync({
           name: form.name,
           unit: form.unit,
           quantity,
           lowStockThreshold,
         });
-        addToCache(created);
         toast.success("Item added");
       }
       setDialogOpen(false);
@@ -139,7 +129,6 @@ export default function Inventory() {
   async function handleDelete(id: bigint) {
     try {
       await deleteItem.mutateAsync(id);
-      removeFromCache(id);
       toast.success("Item deleted");
       setDeleteId(null);
     } catch {
@@ -156,11 +145,10 @@ export default function Inventory() {
       return;
     }
     try {
-      const updated = await updateStock.mutateAsync({
+      await updateStock.mutateAsync({
         id: item.id,
         quantity: qty,
       });
-      updateInCache(updated);
       setEditingStock((prev) => {
         const next = { ...prev };
         delete next[String(item.id)];
@@ -212,13 +200,13 @@ export default function Inventory() {
           <CardTitle className="font-display text-xl">Stock Levels</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {items === undefined ? (
+          {isLoading ? (
             <div className="p-4 space-y-3">
               {["i1", "i2", "i3", "i4"].map((k) => (
                 <Skeleton key={k} className="h-10 w-full" />
               ))}
             </div>
-          ) : items.length === 0 ? (
+          ) : items?.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Package className="w-12 h-12 text-muted-foreground mb-3" />
               <h3 className="font-display text-xl font-bold text-foreground">
@@ -242,7 +230,7 @@ export default function Inventory() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((item) => {
+                  {(items ?? []).map((item) => {
                     const isLow = item.quantity <= item.lowStockThreshold;
                     const stockKey = String(item.id);
                     const editing = stockKey in editingStock;

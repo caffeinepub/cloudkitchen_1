@@ -28,6 +28,18 @@ export function useAvailableMenuItems() {
   });
 }
 
+export function useAllMenuItems() {
+  const { actor, isFetching } = useActor();
+  return useQuery<MenuItem[]>({
+    queryKey: ["menuItems"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllMenuItems();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
 export function useCreateMenuItem() {
   const { actor } = useActor();
   const qc = useQueryClient();
@@ -171,17 +183,14 @@ export function useUpdateOrderStatus() {
 
 // ─── Inventory ───────────────────────────────────────────────────────────────
 export function useInventoryItems() {
-  const { actor } = useActor();
+  const { actor, isFetching } = useActor();
   return useQuery<InventoryItem[]>({
-    queryKey: ["inventory"],
+    queryKey: ["inventoryAll"],
     queryFn: async () => {
       if (!actor) return [];
-      // Get all orders to infer inventory — but actually we need all inventory
-      // There's no getAllInventoryItems, so we work with what we have
-      // We'll track inventory via local state augmented with getLowStockItems
-      return [];
+      return actor.getAllInventoryItems();
     },
-    enabled: false, // Disabled — see useInventoryWithLowStock
+    enabled: !!actor && !isFetching,
   });
 }
 

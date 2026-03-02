@@ -30,7 +30,10 @@ export function StatusBadge({
   size = "sm",
   className,
 }: StatusBadgeProps) {
-  const config = STATUS_CONFIG[status];
+  const config = STATUS_CONFIG[status] ?? {
+    label: String(status),
+    className: "bg-muted text-muted-foreground border-muted",
+  };
   return (
     <span
       className={cn(

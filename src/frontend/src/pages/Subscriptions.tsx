@@ -162,13 +162,15 @@ function BowlSizeBadge({ size }: { size: BowlSize }) {
     [BowlSize.medium]: "350gm",
     [BowlSize.large]: "500gm",
   };
+  const label = labels[size] ?? String(size);
+  const fullLabel = fullLabels[size] ?? String(size);
   return (
     <Badge
       variant="secondary"
       className="font-body text-xs font-semibold"
-      title={fullLabels[size]}
+      title={fullLabel}
     >
-      {labels[size]}
+      {label}
     </Badge>
   );
 }
@@ -191,7 +193,10 @@ function PaymentBadge({ status }: { status: PaymentStatus }) {
         "bg-[oklch(0.55_0.22_25/0.15)] text-[oklch(0.55_0.22_25)] border-[oklch(0.55_0.22_25/0.4)]",
     },
   };
-  const c = config[status];
+  const c = config[status] ?? {
+    label: String(status),
+    className: "bg-muted text-muted-foreground border-border",
+  };
   return (
     <span
       className={cn(

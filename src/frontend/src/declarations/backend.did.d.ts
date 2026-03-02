@@ -130,6 +130,8 @@ export interface _SERVICE {
   'deletePlan' : ActorMethod<[bigint], undefined>,
   'getActiveSubscriptionCount' : ActorMethod<[], bigint>,
   'getAllCustomers' : ActorMethod<[], Array<Customer>>,
+  'getAllInventoryItems' : ActorMethod<[], Array<InventoryItem>>,
+  'getAllMenuItems' : ActorMethod<[], Array<MenuItem>>,
   'getAllOrders' : ActorMethod<[], Array<Order>>,
   'getAllPlans' : ActorMethod<[], Array<Plan>>,
   'getAllSubscriptions' : ActorMethod<[], Array<Subscription>>,

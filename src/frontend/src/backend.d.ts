@@ -129,6 +129,8 @@ export interface backendInterface {
     deletePlan(id: bigint): Promise<void>;
     getActiveSubscriptionCount(): Promise<bigint>;
     getAllCustomers(): Promise<Array<Customer>>;
+    getAllInventoryItems(): Promise<Array<InventoryItem>>;
+    getAllMenuItems(): Promise<Array<MenuItem>>;
     getAllOrders(): Promise<Array<Order>>;
     getAllPlans(): Promise<Array<Plan>>;
     getAllSubscriptions(): Promise<Array<Subscription>>;

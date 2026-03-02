@@ -48,7 +48,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { MenuItem } from "../backend.d";
 import {
-  useAvailableMenuItems,
+  useAllMenuItems,
   useCreateMenuItem,
   useDeleteMenuItem,
   useToggleMenuItemAvailability,
@@ -82,7 +82,7 @@ const EMPTY_FORM: MenuFormData = {
 };
 
 export default function MenuManagement() {
-  const { data: items, isLoading } = useAvailableMenuItems();
+  const { data: items, isLoading } = useAllMenuItems();
   const createItem = useCreateMenuItem();
   const updateItem = useUpdateMenuItem();
   const deleteItem = useDeleteMenuItem();
