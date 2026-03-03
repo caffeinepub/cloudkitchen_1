@@ -215,7 +215,7 @@ export function ReceiptModal({
                     <Leaf className="w-4 h-4 text-primary" />
                   </div>
                   <span className="receipt-header-title font-display text-xl font-bold text-foreground tracking-tight">
-                    SaladStation
+                    Salad Khatora
                   </span>
                 </div>
                 <p className="receipt-header-meta text-xs text-muted-foreground">

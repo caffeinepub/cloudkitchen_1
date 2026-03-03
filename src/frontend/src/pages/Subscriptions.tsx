@@ -62,6 +62,7 @@ import {
   SubscriptionPlan,
   SubscriptionStatus,
 } from "../backend.d";
+import { useAdminActor } from "../hooks/useAdminActor";
 import {
   useAllSubscriptions,
   useCheckAndExpireSubscriptions,
@@ -231,6 +232,8 @@ function AddSubscriptionDialog({
 }: AddSubscriptionDialogProps) {
   const createSub = useCreateSubscription();
   const updateSub = useUpdateSubscription();
+  const { actor, isFetching: actorFetching } = useAdminActor();
+  const isActorReady = !!actor && !actorFetching;
   const [form, setForm] = useState({ ...DEFAULT_ADD_FORM });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -462,9 +465,14 @@ function AddSubscriptionDialog({
             <Button
               type="submit"
               className="ember-gradient text-white border-0 font-body"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isActorReady}
             >
-              {isSubmitting ? (
+              {!isActorReady ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                  Connecting…
+                </>
+              ) : isSubmitting ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
                   Adding…

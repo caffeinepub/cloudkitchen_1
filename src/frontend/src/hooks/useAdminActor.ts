@@ -21,8 +21,12 @@ export function useAdminActor(): {
   const initializedRef = useRef<backendInterface | null>(null);
   const qc = useQueryClient();
 
+  // Use a stable key that changes only when the actor identity changes.
+  // Using "ready"/"pending" strings avoids the stale-boolean problem.
+  const actorKey = baseActor ? "ready" : "pending";
+
   const adminQuery = useQuery<backendInterface | null>({
-    queryKey: ["adminActor", !!baseActor],
+    queryKey: ["adminActor", actorKey],
     queryFn: async () => {
       if (!baseActor) return null;
       const token = getSecretParameter("caffeineAdminToken") || "";
@@ -40,6 +44,11 @@ export function useAdminActor(): {
     },
     enabled: !!baseActor && !baseFetching,
     staleTime: Number.POSITIVE_INFINITY,
+    // Retry up to 3 times if initialization fails
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10_000),
+    // Do NOT re-run initialization on every mount — once is enough
+    refetchOnMount: false,
   });
 
   useEffect(() => {

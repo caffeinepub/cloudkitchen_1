@@ -44,20 +44,23 @@ export function useCreateMenuItem() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       name: string;
       description: string;
       price: number;
       category: string;
       imageUrl: string;
-    }) =>
-      actor!.createMenuItem(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.createMenuItem(
         data.name,
         data.description,
         data.price,
         data.category,
         data.imageUrl,
-      ),
+      );
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["menuItems"] }),
   });
 }
@@ -66,22 +69,25 @@ export function useUpdateMenuItem() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       id: bigint;
       name: string;
       description: string;
       price: number;
       category: string;
       imageUrl: string;
-    }) =>
-      actor!.updateMenuItem(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.updateMenuItem(
         data.id,
         data.name,
         data.description,
         data.price,
         data.category,
         data.imageUrl,
-      ),
+      );
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["menuItems"] }),
   });
 }
@@ -90,7 +96,11 @@ export function useDeleteMenuItem() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: bigint) => actor!.deleteMenuItem(id),
+    mutationFn: async (id: bigint) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.deleteMenuItem(id);
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["menuItems"] }),
   });
 }
@@ -99,7 +109,11 @@ export function useToggleMenuItemAvailability() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: bigint) => actor!.toggleMenuItemAvailability(id),
+    mutationFn: async (id: bigint) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.toggleMenuItemAvailability(id);
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["menuItems"] }),
   });
 }
@@ -152,18 +166,21 @@ export function usePlaceOrder() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       customerName: string;
       customerPhone: string;
       items: OrderItem[];
       notes: string;
-    }) =>
-      actor!.placeOrder(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.placeOrder(
         data.customerName,
         data.customerPhone,
         data.items,
         data.notes,
-      ),
+      );
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
   });
 }
@@ -172,8 +189,11 @@ export function useUpdateOrderStatus() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { orderId: bigint; status: OrderStatus }) =>
-      actor!.updateOrderStatus(data.orderId, data.status),
+    mutationFn: async (data: { orderId: bigint; status: OrderStatus }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.updateOrderStatus(data.orderId, data.status);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["activeOrders"] });
@@ -210,18 +230,21 @@ export function useCreateInventoryItem() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       name: string;
       unit: string;
       quantity: number;
       lowStockThreshold: number;
-    }) =>
-      actor!.createInventoryItem(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.createInventoryItem(
         data.name,
         data.unit,
         data.quantity,
         data.lowStockThreshold,
-      ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
       qc.invalidateQueries({ queryKey: ["lowStock"] });
@@ -234,20 +257,23 @@ export function useUpdateInventoryItem() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       id: bigint;
       name: string;
       unit: string;
       quantity: number;
       lowStockThreshold: number;
-    }) =>
-      actor!.updateInventoryItem(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.updateInventoryItem(
         data.id,
         data.name,
         data.unit,
         data.quantity,
         data.lowStockThreshold,
-      ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
       qc.invalidateQueries({ queryKey: ["lowStock"] });
@@ -260,7 +286,11 @@ export function useDeleteInventoryItem() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: bigint) => actor!.deleteInventoryItem(id),
+    mutationFn: async (id: bigint) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.deleteInventoryItem(id);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
       qc.invalidateQueries({ queryKey: ["lowStock"] });
@@ -273,8 +303,11 @@ export function useUpdateStockLevel() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { id: bigint; quantity: number }) =>
-      actor!.updateStockLevel(data.id, data.quantity),
+    mutationFn: async (data: { id: bigint; quantity: number }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.updateStockLevel(data.id, data.quantity);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
       qc.invalidateQueries({ queryKey: ["lowStock"] });
@@ -349,20 +382,23 @@ export function useCreateSubscription() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       customerName: string;
       customerPhone: string;
       plan: SubscriptionPlan;
       bowlSize: BowlSize;
       price: number;
-    }) =>
-      actor!.createSubscription(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.createSubscription(
         data.customerName,
         data.customerPhone,
         data.plan,
         data.bowlSize,
         data.price,
-      ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["subscriptions"] });
       qc.invalidateQueries({ queryKey: ["activeSubscriptionCount"] });
@@ -374,8 +410,11 @@ export function useUpdateSubscriptionStatus() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { id: bigint; status: SubscriptionStatus }) =>
-      actor!.updateSubscriptionStatus(data.id, data.status),
+    mutationFn: async (data: { id: bigint; status: SubscriptionStatus }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.updateSubscriptionStatus(data.id, data.status);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["subscriptions"] });
       qc.invalidateQueries({ queryKey: ["activeSubscriptionCount"] });
@@ -387,7 +426,11 @@ export function useCheckAndExpireSubscriptions() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => actor!.checkAndExpireSubscriptions(),
+    mutationFn: async () => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.checkAndExpireSubscriptions();
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["subscriptions"] });
       qc.invalidateQueries({ queryKey: ["activeSubscriptionCount"] });
@@ -413,18 +456,21 @@ export function useUpdateSubscription() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       id: bigint;
       bowlSize: BowlSize;
       price: number;
       paymentStatus: PaymentStatus;
-    }) =>
-      actor!.updateSubscription(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.updateSubscription(
         data.id,
         data.bowlSize,
         data.price,
         data.paymentStatus,
-      ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["subscriptions"] });
     },
@@ -448,18 +494,21 @@ export function useCreateCustomer() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       name: string;
       mobileNo: string;
       preferences: string;
       address: string;
-    }) =>
-      actor!.createCustomer(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.createCustomer(
         data.name,
         data.mobileNo,
         data.preferences,
         data.address,
-      ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customers"] });
     },
@@ -470,20 +519,23 @@ export function useUpdateCustomer() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       id: bigint;
       name: string;
       mobileNo: string;
       preferences: string;
       address: string;
-    }) =>
-      actor!.updateCustomer(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.updateCustomer(
         data.id,
         data.name,
         data.mobileNo,
         data.preferences,
         data.address,
-      ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customers"] });
     },
@@ -494,7 +546,11 @@ export function useDeleteCustomer() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: bigint) => actor!.deleteCustomer(id),
+    mutationFn: async (id: bigint) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.deleteCustomer(id);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customers"] });
     },
@@ -518,20 +574,23 @@ export function useCreatePlan() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       name: string;
       planType: SubscriptionPlan;
       price250gm: number;
       price350gm: number;
       price500gm: number;
-    }) =>
-      actor!.createPlan(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.createPlan(
         data.name,
         data.planType,
         data.price250gm,
         data.price350gm,
         data.price500gm,
-      ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plans"] });
       qc.invalidateQueries({ queryKey: ["planEnrollments"] });
@@ -543,7 +602,7 @@ export function useUpdatePlan() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       id: bigint;
       name: string;
       planType: SubscriptionPlan;
@@ -551,8 +610,10 @@ export function useUpdatePlan() {
       price350gm: number;
       price500gm: number;
       isActive: boolean;
-    }) =>
-      actor!.updatePlan(
+    }) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.updatePlan(
         data.id,
         data.name,
         data.planType,
@@ -560,7 +621,8 @@ export function useUpdatePlan() {
         data.price350gm,
         data.price500gm,
         data.isActive,
-      ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plans"] });
       qc.invalidateQueries({ queryKey: ["planEnrollments"] });
@@ -572,7 +634,11 @@ export function useDeletePlan() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: bigint) => actor!.deletePlan(id),
+    mutationFn: async (id: bigint) => {
+      if (!actor)
+        throw new Error("Backend not ready, please try again in a moment");
+      return actor.deletePlan(id);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plans"] });
       qc.invalidateQueries({ queryKey: ["planEnrollments"] });

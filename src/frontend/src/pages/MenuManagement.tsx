@@ -47,6 +47,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import type { MenuItem } from "../backend.d";
+import { useAdminActor } from "../hooks/useAdminActor";
 import {
   useAllMenuItems,
   useCreateMenuItem,
@@ -82,6 +83,7 @@ const EMPTY_FORM: MenuFormData = {
 };
 
 export default function MenuManagement() {
+  const { actor, isFetching: actorLoading } = useAdminActor();
   const { data: items, isLoading } = useAllMenuItems();
   const createItem = useCreateMenuItem();
   const updateItem = useUpdateMenuItem();
@@ -120,6 +122,15 @@ export default function MenuManagement() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // Guard: actor must be ready before any mutation
+    if (!actor || actorLoading) {
+      toast.error(
+        "Still connecting to backend, please wait a moment and try again",
+      );
+      return;
+    }
+
     const price = Number.parseFloat(form.price);
     if (Number.isNaN(price) || price <= 0) {
       toast.error("Please enter a valid price");
@@ -147,29 +158,43 @@ export default function MenuManagement() {
         toast.success("Menu item added");
       }
       setDialogOpen(false);
-    } catch {
-      toast.error("Failed to save menu item");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to save menu item:", message);
+      toast.error(`Failed to save menu item: ${message.slice(0, 120)}`);
     }
   }
 
   async function handleDelete(id: bigint) {
+    if (!actor) {
+      toast.error(
+        "Still connecting to backend, please wait a moment and try again",
+      );
+      return;
+    }
     try {
       await deleteItem.mutateAsync(id);
       toast.success("Item deleted");
       setDeleteId(null);
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to delete item:", message);
       toast.error("Failed to delete item");
     }
   }
 
   async function handleToggle(id: bigint) {
+    if (!actor) return;
     try {
       await toggleAvailability.mutateAsync(id);
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to update availability:", message);
       toast.error("Failed to update availability");
     }
   }
 
+  const isActorReady = !!actor && !actorLoading;
   const isSaving = createItem.isPending || updateItem.isPending;
 
   return (
@@ -185,10 +210,16 @@ export default function MenuManagement() {
         </div>
         <Button
           onClick={openCreate}
+          disabled={!isActorReady}
           className="gap-2 ember-gradient text-white border-0"
+          title={!isActorReady ? "Connecting to backend…" : undefined}
         >
-          <Plus className="w-4 h-4" />
-          Add Item
+          {!isActorReady ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Plus className="w-4 h-4" />
+          )}
+          {!isActorReady ? "Connecting…" : "Add Item"}
         </Button>
       </div>
 
@@ -412,11 +443,17 @@ export default function MenuManagement() {
               </Button>
               <Button
                 type="submit"
-                disabled={isSaving}
+                disabled={isSaving || !isActorReady}
                 className="ember-gradient text-white border-0"
               >
-                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editingItem ? "Update Item" : "Add Item"}
+                {(isSaving || !isActorReady) && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {!isActorReady
+                  ? "Connecting…"
+                  : editingItem
+                    ? "Update Item"
+                    : "Add Item"}
               </Button>
             </DialogFooter>
           </form>

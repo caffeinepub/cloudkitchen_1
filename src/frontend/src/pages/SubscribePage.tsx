@@ -208,7 +208,7 @@ export default function SubscribePage() {
             <Leaf className="w-4 h-4 text-white" />
           </div>
           <span className="font-display text-lg font-bold text-sidebar-foreground">
-            SALAD<span className="text-primary">STATION</span>
+            SALAD<span className="text-primary">KHATORA</span>
           </span>
         </div>
       </header>

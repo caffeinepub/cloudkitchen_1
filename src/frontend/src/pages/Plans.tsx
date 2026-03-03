@@ -43,6 +43,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { type Plan, SubscriptionPlan } from "../backend.d";
+import { useAdminActor } from "../hooks/useAdminActor";
 import {
   useAllPlans,
   useCreatePlan,
@@ -112,6 +113,8 @@ interface PlanDialogProps {
 function PlanDialog({ open, onOpenChange, editingPlan }: PlanDialogProps) {
   const createPlan = useCreatePlan();
   const updatePlan = useUpdatePlan();
+  const { actor, isFetching: actorFetching } = useAdminActor();
+  const isActorReady = !!actor && !actorFetching;
   const isEdit = !!editingPlan;
 
   const [form, setForm] = useState(() =>
@@ -367,9 +370,14 @@ function PlanDialog({ open, onOpenChange, editingPlan }: PlanDialogProps) {
             <Button
               type="submit"
               className="ember-gradient text-white border-0 font-body"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isActorReady}
             >
-              {isSubmitting ? (
+              {!isActorReady ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                  Connecting…
+                </>
+              ) : isSubmitting ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
                   {isEdit ? "Saving…" : "Creating…"}
