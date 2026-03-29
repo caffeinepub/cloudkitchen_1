@@ -155,7 +155,7 @@ export function MobileAdminNav() {
             <Leaf className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="font-display text-base font-bold text-sidebar-foreground">
-            SALAD<span className="text-primary">STATION</span>
+            SALAD<span className="text-primary">KHATORA</span>
           </span>
         </div>
         <Button
